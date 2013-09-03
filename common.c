@@ -3,13 +3,10 @@
 #include "header.h"
 #endif
 
-int sem_id;
+int sem_id; // usata in funzioni che richimano P e V
 
-void stampa_messaggio(msg_rqst msg) {
-	printf("[pid] %d [richiesta] %d\n",msg.p,msg.r);
-}
-
-int P(int semid, int semnum) {
+int P(int semid, int semnum)	// signal
+{
 		struct sembuf cmd;
 		cmd.sem_num = semnum;
 		cmd.sem_op = -1;
@@ -19,7 +16,8 @@ int P(int semid, int semnum) {
 }
 
 
-int V(int semid, int semnum) {
+int V(int semid, int semnum)	// wait
+{
 		struct sembuf cmd;
 		cmd.sem_num = semnum;
 		cmd.sem_op = 1;
@@ -28,28 +26,17 @@ int V(int semid, int semnum) {
 		return 0;
 }
 
-/* Would like a semi-open interval [min, max) */
-int random_in_range (unsigned int min, unsigned int max)
+
+
+stato get_stato(int x, int y, short unsigned* m)
 {
-	int base_random = rand(); /* in [0, RAND_MAX] */
-	if (RAND_MAX == base_random) return random_in_range(min, max);
-	/* now guaranteed to be in [0, RAND_MAX) */
-	int range       = max - min,
-		remainder   = RAND_MAX % range,
-		bucket      = RAND_MAX / range;
-  /* There are range buckets, plus one smaller interval
-     within remainder of RAND_MAX */
-	 if (base_random < RAND_MAX - remainder) {	
-		return min + base_random/bucket;
-	} else {
-		return random_in_range (min, max);
-	}
-}
+	// a meno che diversamente specificato all'infuori di questa
+	// funzione, le celle al di la' dei bordi vengono considerate
+	// come perennemente morte
+	if(x<0 || y<0 || x>=N_X || y>=N_Y) return MORTO;
 
-stato get_stato(int x, int y, short unsigned* m){ 
-	if(x<0 || y<0 || x>=N_X || y>=N_Y) return MORTO;		// se non calcolati, i bordi non fanno parte dell'universo
-
-	switch(m[x*N_Y+y]) {
+	switch(m[x*N_Y+y])
+	{
 		case 0:
 			return MORTO;
 			break;
@@ -65,7 +52,8 @@ stato get_stato(int x, int y, short unsigned* m){
 	}
 }
 
-short in_array(short n,short* a,short size) {
+short in_array(short n,short* a,short size)
+{
 	short i;
 	for(i=0;i<size;++i) {
 		if( *(a+i)==n ) return 1;
@@ -73,37 +61,42 @@ short in_array(short n,short* a,short size) {
 	return 0;	
 }
 
-void init_matrix_1D(short unsigned* m,int* n_gen) {
-	P(sem_id,0);
+void init_matrix(short unsigned* m,int* n_gen)
+{
 	*n_gen=0;
 	int i;
 	for(i=0;i<N_X*N_Y;i++) {
-		if(rand()%3==0)
+		if( random_in_range(0,RAND_MAX) % 2 == 0 )
 			m[i]=1;
 		else
 			m[i]=0;
 	}
-	V(sem_id,0);
-
 }
 
-
-void init_matrix(short unsigned* m,int* n_gen) {
-	*n_gen=0;
-	int i;
-	for(i=0;i<N_X;i++) {
-		m[i]=0;
-	}
-	fiat(N_X/2,0,m);
-	*n_gen=0;
-
-}
-
-
-void  uccidi(int x,int y,short unsigned* m) {
+void  uccidi(int x,int y,short unsigned* m)
+{
 	m[x*N_Y+y]=0;
 }
 
-void fiat(int x,int y,short unsigned* m) {
+void fiat(int x,int y,short unsigned* m)
+{
 	m[x*N_Y+y]=1;
+}
+
+/*	funzione trovata in rete per il calcolo di un numero		*/
+/*	pseudo casuale all'interno dell'intervallo semi aperto		*/
+/*			[min,max)					*/
+/*				   autore presunto: Ryan Reich		*/
+int random_in_range (unsigned int min, unsigned int max)	
+{
+	int base_random = rand();
+	if (RAND_MAX == base_random) return random_in_range(min, max);
+	int range       = max - min,
+		remainder   = RAND_MAX % range,
+		bucket      = RAND_MAX / range;
+	 if (base_random < RAND_MAX - remainder) {	
+		return min + base_random/bucket;
+	} else {
+		return random_in_range (min, max);
+	}
 }

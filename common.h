@@ -3,12 +3,35 @@
 #include "header.h"
 #endif
 
-void stampa_messaggio(msg_rqst msg);
-int P(int semid, int semnum);
-int V(int semid, int semnum);
-int random_in_range (unsigned int min, unsigned int max);
-short in_array(short n,short* a,short size);
-stato get_stato(int x, int y, short unsigned* m);
-void init_matrix(short unsigned* m,int* n_gen);
-void  uccidi(int x,int y,short unsigned* m);
-void fiat(int x,int y,short unsigned* m);
+/* 
+	gestione semafori
+*/
+int		P(int, int );		// signal
+int		V(int, int);		// wait
+
+/*
+	libreria per migliore pseudo casualita'
+	in intervallo aperto [a,b)
+*/
+int		random_in_range (unsigned int, unsigned int);
+
+
+short		in_array(short, short*, short);
+
+/*
+	inizializza matrice in modo casuale
+*/
+void		init_matrix(short unsigned*,int*);
+
+/*
+	imposta a 1 (vivo) o 0 (morto) lo stato di una cella
+	simulando due dimensioni su un vettore unidimensionale
+*/
+void		uccidi(int,int,short unsigned*);
+void		fiat(int,int,short unsigned*);
+
+/*	
+	ritorna lo stato della cella (VIVO se 1, MORTO se 0)
+	simulando due dimensioni su un vettore unidimensionale
+*/
+stato		get_stato(int, int, short unsigned*);
