@@ -2,6 +2,7 @@
 #define _HEADER_
 #include "header.h"
 #endif
+#include "rules.h"
 
 
 
@@ -29,6 +30,11 @@ int	shm_id, sem_id, sh_gen_id;
 /*	notazione MCell: Sx/By dove 'x' e' il numero di vicini		*/
 /*	vivi necessari per sopravvivere e 'y' il numero di vicini	*/
 /*	vivi necessari per rinascere					*/
+
+
+
+
+
 short	rule_s[2]={2,3};		// S23/B3: game of life
 short	rule_b[1]={3};
 short	size_s=2;

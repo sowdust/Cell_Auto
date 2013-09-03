@@ -12,5 +12,4 @@
 #include <sys/msg.h>
 #include <sys/sem.h>
 #include "tipi.h"
-#include "buffer.h"
 #include "common.h"

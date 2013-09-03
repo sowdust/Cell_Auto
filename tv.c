@@ -4,6 +4,12 @@
 #endif
 
 
+
+void riparti(int);
+void esci(int);
+
+
+
 int qid_to_gr,qid_to_proc,qid_figlio_term;
 int shm_id,sem_id,sh_gen_id;
 short unsigned** shm;

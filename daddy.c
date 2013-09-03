@@ -2,6 +2,8 @@
 #define _HEADER_
 #include "header.h"
 #endif
+#include "rules.h"
+
 
 void main(int argc, char* argv[])
 {

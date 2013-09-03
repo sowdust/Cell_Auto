@@ -30,32 +30,38 @@ typedef enum { VIVO, MORTO, ICS } stato;
 typedef enum { ERROR, OKK } status;
 //typedef enum { TRUE, FALSE } bool;
 typedef enum { UPLOAD, DOWNLOAD, AGGANCIO, ADDIO } richiesta;
+
 typedef struct {
 	int v;
 	time_t t;
 	pid_t p;
 }buffer_entry;
+
 typedef struct {
         buffer_entry buffer[N_ELEMENTI_BUFFER];
         int first;
         int n;
 	int size;
 }buffer;
+
 //typedef struct {
   //      short  m[N_X][N_Y];
 //}matrix;
 typedef unsigned short matrix[N_X][N_Y];
 typedef struct nodo* lista;
+
 struct nodo{
 	pid_t p;
 	time_t t;
 	lista nxt;
 };
+
 typedef struct {
 	long type;
 	pid_t p;
 	richiesta r;
 }msg_rqst;
+
 typedef struct {
 	long type;
 	pid_t p;
@@ -64,10 +70,11 @@ typedef struct {
 	int sem_id;
 	int sh_gen_id;
 }msg_rspns;
+
 typedef struct {
-	short* rule_s;
-	short* rule_b;
 	short  size_rule_s;
 	short  size_rule_b;
-	short init_function;
+	short sierpinski;
+	short rule_s[8];
+	short rule_b[8];
 } rule;
