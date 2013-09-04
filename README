@@ -1,0 +1,3 @@
+simple cellular automata.
+can take some default pattern / rules (hardwired into the code) or read from rle files.
+spread up into different cuncurrent processes ( requirement of the school project )
