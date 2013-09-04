@@ -4,49 +4,44 @@
 #endif
 
 
-int n_x, n_y;
-int size_s = 0;
-int size_b = 0;
-int rule_s[80];
-int rule_b[80];
-char rule_letta[80];
-short unsigned * m = NULL;
-
-short unsigned * commento(FILE *);
-short unsigned * leggi_rule(FILE *);
-short unsigned * decodifica_rule(char *);
-short unsigned * start(FILE *);
-short unsigned * prepara_matrice(FILE *f);
-
-short unsigned * start(FILE * f)
+int start(char * filename, short unsigned * m, short* size_b, short* size_s, short* rule_b, short* rule_s)
 {
 	char c;
-	short unsigned * m;
-	
-	c = fgetc(f);
+	FILE * f;
 
-	switch(c)
+	
+
+	if( !(f = fopen(filename,"r")))
+	{
+		;//error
+	}
+
+
+	switch(	c = fgetc(f) )
 	{
 		case '#':
-			m=commento(f);
+			return commento(f,m,size_b,size_s,rule_b,rule_s);
 			break;
 		case 'x':
-			break;
-		case '!':
-			break;
-		case EOF:
+			return leggi_rule(f,m,size_b,size_s,rule_b,rule_s);
 			break;
 		default:
+			printf("Letto %c\n",c);
+			return -1;
 			break;
 	}
-	return m;
+
+	if( !fclose(f) )
+	{
+		;// error
+	}
+	return 0;
 }
 
-short unsigned *  commento(FILE * f)
+int  commento(FILE * f, short unsigned * m, short* size_b, short* size_s, short* rule_b, short* rule_s)
 {
 	char c;
 	int max = 120;
-	short unsigned * m;
 	char *s = (char *) malloc(sizeof(char) * max);
 	
 	do {
@@ -56,56 +51,66 @@ short unsigned *  commento(FILE * f)
 
 	if ( c == 'x' )
 	{
-		m=leggi_rule(f);
+		return leggi_rule(f,m,size_b,size_s,rule_b,rule_s);
+		
 	} else
 	{
 		printf("Errore letto %c  al posto di x\n",c);
+		return -1;
 	}
 	
 }
 
-short unsigned * leggi_rule(FILE * f)
+int leggi_rule(FILE * f, short unsigned * m, short* size_b, short* size_s, short* rule_b, short* rule_s)
 {
-	if (fscanf(f, " = %d, y = %d, rule = %80s ",&n_x,&n_y,rule_letta) < 3)
-	{
-		perror("letti meno elementi\n");
-	}
-	decodifica_rule(rule_letta);
-	m = (short unsigned *) malloc (sizeof(short unsigned)*n_x*n_y);
-	return( prepara_matrice(f) );
+
+ 	char rule_letta[80];
+ 	int n_x, n_y;
+ 	
+ 	if (fscanf(f, " = %d, y = %d, rule = %80s ",&n_x,&n_y,rule_letta) < 3)
+ 	{
+ 		perror("letti meno elementi\n");
+ 	}
+ 	if(n_x>N_X || n_y>N_Y)	return -1;
+ 	decodifica_rule(rule_letta,size_b,size_s,rule_b,rule_s);
+	
+ 	return( prepara_matrice(f,m,n_x,n_y) );
 }
 
-short unsigned * decodifica_rule(char *s)
-{
-	char c;
-	int r_s;
-	int r_b;
+void decodifica_rule(char * s,short* size_b, short* size_s, short* rule_b, short* rule_s)
+{	// nella forma Bxy/Sklm
 	int i=0;
-	short unsigned * m;
+	*size_s = 0;
+	*size_b = 0;
 	
 	if ( s[0]!= 'B')
 	{
-		printf("Letto %c al posto di B\n",c);
+		printf("Letto %c al posto di B\n",s[0]);
 	}
 	while( s[++i]!='/' )
 	{	
-		rule_b[size_b++]=s[i]-'0';	
+		rule_b[(*size_b)++]=s[i]-'0';	
 	}
-	++i;
-	while( s[++i]!='\0' )
+	while( !isdigit(s[++i])) ; // avanza la S
+	while( isdigit(s[i]))
 	{
-		rule_s[size_s++]=s[i]-'0';
+		rule_s[(*size_s)++] = s[i++] - '0';
 	}
-	
-	return m;
 }
 
 
-short unsigned * prepara_matrice(FILE *f)
+int prepara_matrice(FILE * f, short unsigned * m,int n_x, int n_y)
 {
 	int i;
 	int line=0, col=0;
 	char c, d;
+	int diff_x = (N_X-n_x)/2;
+	int diff_y = (N_Y-n_y)/2;
+	
+	for(i=0; i<N_X*N_Y; ++i)
+	{
+		m[i]=0;
+	}
 
 	while( c!='!' &&  ( c=fgetc(f) )!= EOF)
 	{
@@ -113,56 +118,42 @@ short unsigned * prepara_matrice(FILE *f)
 		{
 			d = fgetc(f);
 			
-			if( d='o' )
+			if( 'o' == d )
 			{
 				for(i=0; i<(c-'0'); ++i)
 				{
-					fiat(col++,line,m);  
+					fiat(diff_x+ col++,diff_y + line,m); 
 				}	
 			} else {
 				for(i=0; i<(c-'0'); ++i)
 				{
-					uccidi(col++,line,m);  
+					uccidi(diff_x + col++,diff_y + line,m);  
 				}			
 			}
 		}
 		if( c == 'o' )
 		{
-			fiat(col++,line,m);
+			fiat(diff_x + col++, diff_y + line,m);
 		}
 		if( c== 'b' )
-		{
-			uccidi(col++,line,m);
+		{	
+			uccidi( diff_x + col++,diff_y + line,m);
 		}
 		if( c== '$' )
-		{	col = 0;
+		{
+			if(col < n_x)
+			{
+				for(col; col<n_x; ++col)
+				{
+					uccidi( diff_x + col,diff_y + line,m);
+				}
+			}
+			col = 0;
+			printf("\n");
 			++line;
 		}
 	}
-	printf("%d %d %d %d \n",line,col,n_y,n_x);
 	
-	return m;
+	return 1;
 }
 
-void main(int argc, char* argv[]) {
-
-	FILE * f;
-	char * filename;
-	char c;
-	
-	filename = "RLE/c2-0002.lif";
-	if( !(f = fopen(filename,"r")))
-	{
-		;//error
-	}
-	
-	while( m == NULL )
-	{
-		m = start(f);
-	}
-	
-	if( !fclose(f) )
-	{
-		;// error
-	}
-}

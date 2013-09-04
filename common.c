@@ -73,6 +73,16 @@ void init_matrix(short unsigned* m,int* n_gen)
 	}
 }
 
+void copy_matrix(short unsigned* m,short unsigned* k,int* n_gen)
+{
+	*n_gen=0;
+	int i;
+	for(i=0;i<N_X*N_Y;i++) {
+		m[i]=k[i];
+	}
+}
+
+
 void  uccidi(int x,int y,short unsigned* m)
 {
 	m[x*N_Y+y]=0;

@@ -99,13 +99,22 @@ void main(int argc, char* argv[])
 	key_t k_att_figlio_term=ftok(FTOK_PATH,'E');
 
 	pid_t pid_tv;
-
+	pid_t pid_daddy;
+	
 	char *argv_exec[] = {
         "/usr/bin/xfce4-terminal",
         "--geometry",
-        "160x45",
+        "160x48",
         "-x",
         "./tv",
+        NULL };
+
+	char *argv_daddy[] = {
+        "/usr/bin/xfce4-terminal",
+        "--geometry",
+        "90x30",
+        "-x",
+        "./daddy",
         NULL };
 
 
@@ -115,9 +124,6 @@ void main(int argc, char* argv[])
 		strerror(errno) );
 	if(signal(SIGINT,anelito)==SIG_ERR)
 		fprintf (stderr, "Errore segnale interruzione\n%s\n",
-		strerror(errno) );
-	if(signal(SIGKILL,anelito)==SIG_ERR)
-		fprintf (stderr, "Errore segnale kill\n%s\n",
 		strerror(errno) );
 
 	// agganciamento a n_generazioni condiviso
@@ -178,6 +184,29 @@ void main(int argc, char* argv[])
 	} else
 	{
 		if (wait(0) != pid_tv)
+		{
+			fprintf (stderr, "Errore nella wait.\n%s\n",
+			strerror(errno) );
+			anelito(0);
+		}
+	}
+	//	fork per il padre
+	pid_daddy = fork();
+	if (pid_daddy == -1)
+	{
+		fprintf (stderr, "Errore nella fork.\n%s\n",
+		strerror(errno) );
+		anelito(0);
+	}
+	if (pid_daddy == 0)
+	{	// execv passa automaticamente envp
+		(void) execv(argv_daddy[0], argv_daddy);
+		fprintf (stderr, "Errore nella execv.\n%s\n",
+		strerror(errno) );
+		anelito(0);
+	} else
+	{
+		if (wait(0) != pid_daddy)
 		{
 			fprintf (stderr, "Errore nella wait.\n%s\n",
 			strerror(errno) );

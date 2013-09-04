@@ -1,6 +1,6 @@
 #define N_ELEMENTI_BUFFER 100
-#define N_X 120
-#define N_Y 40
+#define N_X 130
+#define N_Y 43
 #define BUFFER_PIENO -1
 #define N_PROC_DEFAULT 5
 #define PERMESSI_CODA 0666
@@ -69,12 +69,14 @@ typedef struct {
 	int shm_id;
 	int sem_id;
 	int sh_gen_id;
+	int sh_rule_id;
 }msg_rspns;
 
 typedef struct {
+	short rule_s[8];
+	short rule_b[8];
 	short  size_rule_s;
 	short  size_rule_b;
 	short sierpinski;
-	short rule_s[8];
-	short rule_b[8];
+
 } rule;

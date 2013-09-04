@@ -22,6 +22,7 @@ short		in_array(short, short*, short);
 	inizializza matrice in modo casuale
 */
 void		init_matrix(short unsigned*,int*);
+void copy_matrix(short unsigned*, short unsigned*, int*);
 
 /*
 	imposta a 1 (vivo) o 0 (morto) lo stato di una cella

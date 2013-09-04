@@ -21,13 +21,13 @@ int inuso = 0;
 
 void riparti(int s)
 {
-	char* string;
+	char* string="Big bang in corso...";
 	int row, col;
 	getmaxyx(stdscr,row,col);
 	if(inuso) inuso=V(sem_id,0);
 
 	clear();
-	mvprintw(row/2,(col-strlen(string))/2,"Big bang in corso...");
+	mvprintw(row/2,(col-strlen(string))/2,"%s",string);
 	refresh();
 	sleep(1);
 	if(inuso)	inuso=V(sem_id,0);
@@ -84,7 +84,6 @@ void main(int argc, char* argv[])
 	//	Gestione segnali
 	
 	signal(SIGINT,esci);
-	signal(SIGKILL,esci);
 	signal(SIGQUIT,riparti);
 
 

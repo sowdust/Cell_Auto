@@ -1,47 +1,31 @@
-#ifndef _HEADER_
+#ifndef	HEADER
 #define _HEADER_
 #include "header.h"
 #endif
-#include "rules.h"
+#include "rle_reader.h"
+#define N_FILES 10
+
 
 
 
 void	uscendo(int);
 void	evolvi (short unsigned*, short unsigned*, int*, short*, short,
 		short*, short);
-void	sierpinski(short unsigned*, short unsigned*, int*);
+void	do_sierpinski(short unsigned*, short unsigned*, int*);
+void	init_from_file(short unsigned*,short unsigned*, int*,int,int);
 short	vicini_vivi(int, int, short unsigned*);
 int	get_population(short unsigned*);
 int	in_stallo(short unsigned*, short unsigned*);
 
-
-
-
-
 //	se in sezione critica = 1
 int	inuso = 0;
 
-//	elementi IPC
+// 	elementi IPC
 int	qid_to_gr, qid_to_proc, qid_figlio_term;
 int	shm_id, sem_id, sh_gen_id;
 
-
-/*	le regole per l'evoluzione possono essere passate in		*/
-/*	notazione MCell: Sx/By dove 'x' e' il numero di vicini		*/
-/*	vivi necessari per sopravvivere e 'y' il numero di vicini	*/
-/*	vivi necessari per rinascere					*/
-
-
-
-
-
-short	rule_s[2]={2,3};		// S23/B3: game of life
-short	rule_b[1]={3};
-short	size_s=2;
-short	size_b=1;
-
-
-
+//	nome file per pattern
+char 	f[20];
 
 
 
@@ -56,6 +40,34 @@ int	in_stallo(short unsigned* m, short unsigned* local)
 	}
 	inuso=V(sem_id,0);
 	return (diff == 0);
+}
+
+void	init_from_file(short unsigned * m,short unsigned * from, int * n_gen, int xx, int yy)
+{
+	int x,y;
+	int i,j;
+	int first_x = (N_X-xx)/2;
+	int first_y = (N_Y-yy)/2;
+
+	for(i=0; i<N_X; ++i)
+	{
+		for(j=0; j<N_Y; ++j)
+		{
+			if( x>=first_x && x<=(N_X-first_x)
+				&& y>=first_y && y<=(N_Y-first_y))
+			{
+				if( get_stato(x-first_x,y-first_y,from) == VIVO)
+					fiat(x,y,m);
+				else
+					uccidi(x,y,m);
+
+			}else{
+				uccidi(x,y,m);
+			}
+		}
+	}
+
+	*n_gen = 0;
 }
 
 
@@ -104,7 +116,7 @@ void	evolvi (short unsigned* shm, short unsigned* local,int* n_gen,
 }
 
 
-void	sierpinski(short unsigned* shm, short unsigned* local,int* n_gen)
+void	do_sierpinski(short unsigned* shm, short unsigned* local,int* n_gen)
 {
 	int x,y;
 	int des,sin,su;
@@ -236,16 +248,20 @@ int	get_population(short unsigned* m)
 }
 
 
+
 void	main(int argc, char* argv[])
 {
 	int x,y;
 	int* n_generazioni;
 	short vivi;
+	short rule_number;
 	stato c_s;
+	rule* curr_rule;
 	
-	short unsigned** shm;
-	short unsigned** local_m = (short unsigned**) 
+	short unsigned* shm;
+	short unsigned* local_m = (short unsigned*) 
 				malloc(sizeof(short unsigned) * N_X * N_Y);
+	short unsigned* k;
 	
 	key_t k_att_rqsts=ftok(FTOK_PATH,'A');
 	key_t k_att_rspns=ftok(FTOK_PATH,'B');
@@ -253,10 +269,69 @@ void	main(int argc, char* argv[])
 	
 	msg_rspns* msg_to_proc = (msg_rspns*)malloc(sizeof(msg_rspns));
 	msg_rqst msg;
+
+
+
+/************************************************************************/
+/*			REGOLE PREDEFINITE PER AUTOMA			*/
+/*	Le regole si definiscono in notazione MCell:			*/
+/*	Sp/Bq	dove b e' il numero di vicini vivi necessari affinche'	*/
+/*		una cella sopravviva, q e' il numero di vivi necessari	*/
+/*		affinche' una cellula morta rinasca			*/
+/************************************************************************/
+
+
+//	typedef struct {
+//		short rule_s[8];	es: {2,3} per S23
+//		short rule_b[8];	es: {3} per B3
+//		short  size_rule_s;	es: 2 per S23
+//		short  size_rule_b;	es: 1 per B3
+//		short sierpinski;	1 se si tratta dell'automa 1D,
+//					0 altrimenti
+//	} rule;
+
+
+rule game_of_life	= { {2,3,0,0,0,0,0,0},	{3,0,0,0,0,0,0,0},	2,	1,	0 };
+rule three4_life	= { {3,4,0,0,0,0,0,0},	{3,4,0,0,0,0,0,0},	2,	2,	0 };
+rule high_life		= { {3,2,0,0,0,0,0,0},	{3,6,0,0,0,0,0,0},	2,	2,	0 };
+rule day_night		= { {3,4,6,7,8,0,0,0},	{3,6,7,8,0,0,0,0},	5,	4,	0 };
+rule sierp		= { {0,0,0,0,0,0,0,0},	{8,0,0,0,0,0,0,0},	1,	1,	1 };
+rule rules[] = { game_of_life,
+	three4_life,
+	high_life,
+	day_night,
+	sierp
+	};
+	
+
 	
 	signal(SIGINT, uscendo);
 	signal(SIGTERM, uscendo);
-	signal(SIGKILL, uscendo);
+
+
+
+	//	decide quale regola applicare in base all'input
+	if(argc < 2)	rule_number=0;
+	else		rule_number=atoi(argv[1])-1;
+	curr_rule = (rule*) malloc (sizeof(rule));
+	if(rule_number == 5)
+	{
+		strcpy(f,"RLE/");
+		char * ss[2];
+		ss[0] = (rand()%N_FILES)+ 1 + '0' ;//random_in_range(1,N_FILES+1) + '0';
+		ss[1] = '\0';
+		strcat(f,ss);
+		strcat(f,".lif");
+		printf(" caricando file %s \n",f);
+
+		k = (short unsigned*) malloc (sizeof(short unsigned)*N_X*N_Y);
+		while( start(f,k,&curr_rule->size_rule_b, &curr_rule->size_rule_s, &curr_rule->rule_b, &curr_rule->rule_s) < 0) ;
+		curr_rule->sierpinski=2;
+		
+	} else
+	{
+		*curr_rule = rules[rule_number];
+	}
 
 	//	aggancia le code
 	if(	((qid_to_gr=msgget(k_att_rqsts,0))==-1) 
@@ -303,18 +378,60 @@ void	main(int argc, char* argv[])
 		fprintf (stderr, "[%d] Errore agganciando l'intero condiviso\n",
 			getpid(),strerror(errno) );
 	}
-
-	while(1) {
-//		evolvi_life(shm,local_m,n_generazioni);
-		evolvi(shm,local_m,n_generazioni,&rule_s,size_s,&rule_b,size_b);
-		//sierpinski(shm,local_m,n_generazioni);
-		if(in_stallo(local_m,shm)) {
-			printf("\n\n\n Situazione di stallo\n\n");
-			sleep(2);
-			init_matrix(shm,n_generazioni);
-		}
-	}
 	
-
-	uscendo(1);
+	
+	switch (curr_rule->sierpinski)
+	{
+		case 1:
+			while(1)
+			{
+				do_sierpinski(shm,local_m,n_generazioni);
+				if(in_stallo(local_m,shm))
+				{
+					printf("Situazione di stallo alla generazione %d \n",
+					*n_generazioni);
+					sleep(2);
+					init_matrix(shm,n_generazioni);
+				}
+			}
+			break;
+		case 2:
+			while(1)
+			{
+				if(*n_generazioni == 0)
+				{	
+					P(sem_id,0);
+					copy_matrix(shm,k,n_generazioni);
+					V(sem_id,0);
+				}
+				evolvi(shm,local_m,n_generazioni, curr_rule->rule_s, 
+					curr_rule->size_rule_s, curr_rule->rule_b, curr_rule->size_rule_b );
+				if(in_stallo(local_m,shm))
+				{
+					printf("Situazione di stallo alla generazione %d \n",
+					*n_generazioni);
+					sleep(2);
+					P(sem_id,0);
+					init_matrix(shm,n_generazioni);
+					V(sem_id,0);
+				}
+			}
+			break;
+		default:
+			while(1)
+			{
+				evolvi(shm,local_m,n_generazioni, curr_rule->rule_s, 
+					curr_rule->size_rule_s, curr_rule->rule_b, curr_rule->size_rule_b );
+				if(in_stallo(local_m,shm))
+				{
+					printf("Situazione di stallo alla generazione %d \n",
+					*n_generazioni);
+					sleep(2);
+					P(sem_id,0);
+					init_matrix(shm,n_generazioni);
+					V(sem_id,0);
+				}
+			}
+			break;
+	}
 }
