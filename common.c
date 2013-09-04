@@ -110,3 +110,12 @@ int random_in_range (unsigned int min, unsigned int max)
 		return random_in_range (min, max);
 	}
 }
+
+void termina_proc(lista l,int signal)
+{
+
+	if((l)==NULL) 	return ;
+
+       	kill((l)->p, signal);
+       	termina_proc((l)->nxt,signal);
+}

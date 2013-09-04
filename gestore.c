@@ -1,4 +1,4 @@
-#ifndef _HEADER_
+#ifndef HEADER
 #define _HEADER_
 #include "header.h"
 #endif
@@ -19,7 +19,7 @@ int	shm_id, sem_id, sh_gen_id;
 short unsigned* mat;
 
 //	lista processi agganciati (figli e tv)
-lista* lista_processi = NULL;
+lista lista_processi = NULL;
 
 
 
@@ -77,6 +77,9 @@ void anelito(int s)
 		|| (msgctl(qid_figlio_term, IPC_RMID, NULL)==-1))        
 		fprintf (stderr, "Errore eliminazione code messaggi \n%s\n",
 			strerror(errno) );
+
+	termina_proc(lista_processi,SIGTERM);
+
 	exit(EXIT_SUCCESS);
 }
 
@@ -183,6 +186,7 @@ void main(int argc, char* argv[])
 		anelito(0);
 	} else
 	{
+		ins_in_coda(&lista_processi,pid_tv,time(NULL));
 		if (wait(0) != pid_tv)
 		{
 			fprintf (stderr, "Errore nella wait.\n%s\n",
@@ -206,6 +210,7 @@ void main(int argc, char* argv[])
 		anelito(0);
 	} else
 	{
+		ins_in_coda(&lista_processi,pid_daddy,time(NULL));
 		if (wait(0) != pid_daddy)
 		{
 			fprintf (stderr, "Errore nella wait.\n%s\n",

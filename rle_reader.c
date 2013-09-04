@@ -4,41 +4,43 @@
 #endif
 
 
-int start(char * filename, short unsigned * m, short* size_b, short* size_s, short* rule_b, short* rule_s)
+int start(char * filename, short unsigned * m, short* size_b, 
+	short* size_s, short rule_b[8], short rule_s[8])
 {
 	char c;
 	FILE * f;
-
+	int ret;
 	
 
 	if( !(f = fopen(filename,"r")))
 	{
-		;//error
+		fprintf(stderr,"fopen\n%s\n",strerror(errno));
 	}
 
 
 	switch(	c = fgetc(f) )
 	{
 		case '#':
-			return commento(f,m,size_b,size_s,rule_b,rule_s);
+			ret=commento(f,m,size_b,size_s,rule_b,rule_s);
 			break;
 		case 'x':
-			return leggi_rule(f,m,size_b,size_s,rule_b,rule_s);
+			ret=leggi_rule(f,m,size_b,size_s,rule_b,rule_s);
 			break;
 		default:
 			printf("Letto %c\n",c);
-			return -1;
+			ret = -1;
 			break;
 	}
 
-	if( !fclose(f) )
+	if( fclose(f) != 0 )
 	{
-		;// error
+		fprintf(stderr,"fclosen\n%s\n",strerror(errno));
 	}
-	return 0;
+	return ret;
 }
 
-int  commento(FILE * f, short unsigned * m, short* size_b, short* size_s, short* rule_b, short* rule_s)
+int  commento(FILE * f, short unsigned * m, short* size_b, short* size_s,
+ 	short* rule_b, short* rule_s)
 {
 	char c;
 	int max = 120;
@@ -61,23 +63,8 @@ int  commento(FILE * f, short unsigned * m, short* size_b, short* size_s, short*
 	
 }
 
-int leggi_rule(FILE * f, short unsigned * m, short* size_b, short* size_s, short* rule_b, short* rule_s)
-{
-
- 	char rule_letta[80];
- 	int n_x, n_y;
- 	
- 	if (fscanf(f, " = %d, y = %d, rule = %80s ",&n_x,&n_y,rule_letta) < 3)
- 	{
- 		perror("letti meno elementi\n");
- 	}
- 	if(n_x>N_X || n_y>N_Y)	return -1;
- 	decodifica_rule(rule_letta,size_b,size_s,rule_b,rule_s);
-	
- 	return( prepara_matrice(f,m,n_x,n_y) );
-}
-
-void decodifica_rule(char * s,short* size_b, short* size_s, short* rule_b, short* rule_s)
+int decodifica_rule(char * s,short* size_b, short* size_s, short* rule_b,
+	 short* rule_s)
 {	// nella forma Bxy/Sklm
 	int i=0;
 	*size_s = 0;
@@ -86,6 +73,7 @@ void decodifica_rule(char * s,short* size_b, short* size_s, short* rule_b, short
 	if ( s[0]!= 'B')
 	{
 		printf("Letto %c al posto di B\n",s[0]);
+		return -1;
 	}
 	while( s[++i]!='/' )
 	{	
@@ -96,6 +84,40 @@ void decodifica_rule(char * s,short* size_b, short* size_s, short* rule_b, short
 	{
 		rule_s[(*size_s)++] = s[i++] - '0';
 	}
+	
+
+	return (*size_s + *size_b);
+}
+
+
+int leggi_rule(FILE * f, short unsigned * m, short* size_b, short* size_s,
+	 short* rule_b, short* rule_s)
+{
+
+ 	char rule_letta[80];
+ 	int n_x, n_y;
+ 	int sizes;
+
+ 	if (fscanf(f, " = %d, y = %d, rule = %80s ",&n_x,&n_y,rule_letta)
+		 < 3)
+ 	{
+ 		perror("letti meno elementi\n");
+		return -1;
+ 	}
+ 	if(n_x > N_X || n_y > N_Y)
+	{
+		perror("pattern troppo grande");
+		return -1;
+	}
+	sizes=decodifica_rule(rule_letta,size_b,size_s,rule_b,rule_s);
+	if( (sizes<2) || (sizes>16) )
+	{
+		perror("regole S/P non valide");
+		return -1;
+	}
+
+
+ 	return( prepara_matrice(f,m,n_x,n_y) );
 }
 
 
@@ -127,8 +149,9 @@ int prepara_matrice(FILE * f, short unsigned * m,int n_x, int n_y)
 			} else {
 				for(i=0; i<(c-'0'); ++i)
 				{
-					uccidi(diff_x + col++,diff_y + line,m);  
-				}			
+					uccidi(diff_x + col++,
+						diff_y + line,m);  
+				}
 			}
 		}
 		if( c == 'o' )
@@ -145,7 +168,8 @@ int prepara_matrice(FILE * f, short unsigned * m,int n_x, int n_y)
 			{
 				for(col; col<n_x; ++col)
 				{
-					uccidi( diff_x + col,diff_y + line,m);
+					uccidi( diff_x + col,diff_y
+							+ line,m);
 				}
 			}
 			col = 0;
@@ -154,6 +178,8 @@ int prepara_matrice(FILE * f, short unsigned * m,int n_x, int n_y)
 		}
 	}
 	
-	return 1;
+
+
+	return 0;
 }
 

@@ -4,7 +4,8 @@
 #endif
 #include "rle_reader.h"
 #define N_FILES 10
-
+#define RLE_FILE_DIR "RLE/"
+#define RLE_FILE_EXT ".lif"
 
 
 
@@ -25,12 +26,16 @@ int	qid_to_gr, qid_to_proc, qid_figlio_term;
 int	shm_id, sem_id, sh_gen_id;
 
 //	nome file per pattern
-char 	f[20];
+char * 	f;
 
 
 
 int	in_stallo(short unsigned* m, short unsigned* local)
-{	// da usare in testing, con un solo processo figlio
+{	// teoricamente scorretta con piu processi visto che intercorre
+	// del tempo tra la chiamata di V della funzione di evoluzione
+	// e la chiamata P di questa, ma empriricamente aiuta a 
+	// identificare situazioni periodiche, come succede con i blinker
+	// | - | - ... oppure 0 + 0 + 0 + ...
 
 	int diff=0,y;
 	inuso=P(sem_id,0);
@@ -42,7 +47,8 @@ int	in_stallo(short unsigned* m, short unsigned* local)
 	return (diff == 0);
 }
 
-void	init_from_file(short unsigned * m,short unsigned * from, int * n_gen, int xx, int yy)
+void	init_from_file(short unsigned * m,short unsigned * from, 
+	int * n_gen, int xx, int yy)
 {
 	int x,y;
 	int i,j;
@@ -56,12 +62,14 @@ void	init_from_file(short unsigned * m,short unsigned * from, int * n_gen, int x
 			if( x>=first_x && x<=(N_X-first_x)
 				&& y>=first_y && y<=(N_Y-first_y))
 			{
-				if( get_stato(x-first_x,y-first_y,from) == VIVO)
+				if( get_stato(x-first_x,y-first_y,from) 
+					== VIVO )
 					fiat(x,y,m);
 				else
 					uccidi(x,y,m);
 
-			}else{
+			} else 
+			{
 				uccidi(x,y,m);
 			}
 		}
@@ -111,6 +119,8 @@ void	evolvi (short unsigned* shm, short unsigned* local,int* n_gen,
 			}
 		}
 	}
+
+
 	++(*n_gen);
 	inuso=V(sem_id,0);
 }
@@ -172,8 +182,27 @@ void	do_sierpinski(short unsigned* shm, short unsigned* local,int* n_gen)
 				}
 			}
 		} 
+	
 	++(*n_gen);
 	inuso=V(sem_id,0);
+}
+
+char *	rendi_filename(int n)
+{
+	char * dir = RLE_FILE_DIR;
+	char * extension = RLE_FILE_EXT;
+	char   fn[2];
+	char * f = (char*) malloc(sizeof(char) * FILENAME_MAX);
+
+	fn[0] = (char) (n + '0');
+	fn[1] = '\0';
+
+	strcpy(f,dir);
+	strcat(f,fn);
+	strcat(f,extension);
+
+
+	return f;
 }
 
 
@@ -184,7 +213,7 @@ short	vicini_vivi(int x,int y,short unsigned* shm)
 	
 	//	uniamo i bordi dell'universo in modo da 
 	//	renderlo toroidale
-	if(x==0)	sin=N_X-1;
+	if(x==0) 	sin=N_X-1;
 	else		sin=x-1;
 	if(x==N_X-1)	des=0;
 	else		des=x+1;
@@ -220,8 +249,8 @@ void	uscendo(int s)
 	msg2.r=ADDIO;
 	msg2.type=ADDIO;
 	if ((msgsnd(qid_figlio_term,&msg2,sizeof(msg_rqst),0)) < 0)
-		fprintf (stderr, "[%d]:Impossibile contattare GR prima di terminazione \n%s\n",
-			getpid(),strerror(errno) );
+		fprintf (stderr, "[%d]:Impossibile contattare GR\n%s\n",
+				getpid(),strerror(errno) );
 	if(inuso)
 	{	// liberiamo la memoria condivisa
 		V(sem_id,0);
@@ -257,6 +286,9 @@ void	main(int argc, char* argv[])
 	short rule_number;
 	stato c_s;
 	rule* curr_rule;
+
+	// usato per caricare RLE 
+	int file_number;
 	
 	short unsigned* shm;
 	short unsigned* local_m = (short unsigned*) 
@@ -313,19 +345,18 @@ rule rules[] = { game_of_life,
 	//	decide quale regola applicare in base all'input
 	if(argc < 2)	rule_number=0;
 	else		rule_number=atoi(argv[1])-1;
+	if(argc < 3)	file_number = 1;
+	else		file_number = atoi(argv[2]);
 	curr_rule = (rule*) malloc (sizeof(rule));
 	if(rule_number == 5)
 	{
-		strcpy(f,"RLE/");
-		char * ss[2];
-		ss[0] = (rand()%N_FILES)+ 1 + '0' ;//random_in_range(1,N_FILES+1) + '0';
-		ss[1] = '\0';
-		strcat(f,ss);
-		strcat(f,".lif");
+		f = rendi_filename(file_number);
 		printf(" caricando file %s \n",f);
 
 		k = (short unsigned*) malloc (sizeof(short unsigned)*N_X*N_Y);
-		while( start(f,k,&curr_rule->size_rule_b, &curr_rule->size_rule_s, &curr_rule->rule_b, &curr_rule->rule_s) < 0) ;
+		while( start(f,k,&curr_rule->size_rule_b, 
+			&curr_rule->size_rule_s, curr_rule->rule_b,
+			curr_rule->rule_s) < 0) ;
 		curr_rule->sierpinski=2;
 		
 	} else
@@ -339,7 +370,7 @@ rule rules[] = { game_of_life,
 		|| ((qid_figlio_term=msgget(k_att_figlio_term,0))==-1)	)
 	{
 		fprintf (stderr, "[%d]Impossibile connettersi alle code \n%s\n",
-		getpid(),strerror(errno) );
+				getpid(),strerror(errno) );
 		uscendo(0);
 	}
 
@@ -349,12 +380,13 @@ rule rules[] = { game_of_life,
 	if( (msgsnd(qid_to_gr,&msg,sizeof(msg_rqst),0)) < 0 ) 
 	{
 		fprintf (stderr, "Errore nell'invio messaggio di aggancio\n%s\n",
-			strerror(errno) );
+				strerror(errno) );
 		uscendo(0);
 	}
 	
 	//	ricezione conferma aggancio
-	if(msgrcv(qid_to_proc,msg_to_proc,sizeof(msg_rspns)-sizeof(long),0,0) <= 0)
+	if(msgrcv(qid_to_proc,msg_to_proc,sizeof(msg_rspns)-sizeof(long),0,0)
+			<= 0)
 	{
 		fprintf (stderr, "[%d] messaggio vuoto  [%s:%d]\n%s\n",
 		getpid(),__FILE__,__LINE__,strerror(errno) );
@@ -367,7 +399,7 @@ rule rules[] = { game_of_life,
 		printf("[%d] Agganciato al GR\n ", getpid());
 	}
 	
-	//	COLLEGAMENTO MEM CONDIVISA IN PROPRIO SPAZIO INDIRIZZI
+	//	aggiunta mem condivisa in proprio spazio indirizzi
 	if((shm = shmat(shm_id,NULL,0)) < 0 )
 	{
 		fprintf (stderr, "[%d] Errore agganciando matrice condivisa\n",
@@ -388,7 +420,7 @@ rule rules[] = { game_of_life,
 				do_sierpinski(shm,local_m,n_generazioni);
 				if(in_stallo(local_m,shm))
 				{
-					printf("Situazione di stallo alla generazione %d \n",
+					printf("Stallo alla generazione %d \n",
 					*n_generazioni);
 					sleep(2);
 					init_matrix(shm,n_generazioni);
@@ -408,12 +440,12 @@ rule rules[] = { game_of_life,
 					curr_rule->size_rule_s, curr_rule->rule_b, curr_rule->size_rule_b );
 				if(in_stallo(local_m,shm))
 				{
-					printf("Situazione di stallo alla generazione %d \n",
+					printf("Stallo alla generazione %d \n",
 					*n_generazioni);
 					sleep(2);
-					P(sem_id,0);
+					inuso=P(sem_id,0);
 					init_matrix(shm,n_generazioni);
-					V(sem_id,0);
+					inuso=V(sem_id,0);
 				}
 			}
 			break;
@@ -424,12 +456,12 @@ rule rules[] = { game_of_life,
 					curr_rule->size_rule_s, curr_rule->rule_b, curr_rule->size_rule_b );
 				if(in_stallo(local_m,shm))
 				{
-					printf("Situazione di stallo alla generazione %d \n",
+					printf("Stallo alla generazione %d \n",
 					*n_generazioni);
 					sleep(2);
-					P(sem_id,0);
+					inuso=P(sem_id,0);
 					init_matrix(shm,n_generazioni);
-					V(sem_id,0);
+					inuso=V(sem_id,0);
 				}
 			}
 			break;

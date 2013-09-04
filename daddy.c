@@ -25,7 +25,7 @@ void main(int argc, char* argv[])
 	printf("[3]\tHigh Life\n");
 	printf("[4]\tDay and Night\n");
 	printf("[5]\tEmulatore automa unidimensionale triangolo di Sierpinski\n");
-	printf("[6]\tPattern da file\n");
+	printf("[6]\tPattern casuale da file\n");
 	printf("[0]\tUscire\n");
 
 	if( (c = getchar()) == '0' ) exit(EXIT_SUCCESS);
@@ -33,7 +33,8 @@ void main(int argc, char* argv[])
 	//	trasforma la scelta in una stringa
 	//	e sottrae uno 
 	arg_due[0]= c;
-	arg_due[1]='\0';
+	arg_due[1] = random_in_range(1,RLE_FILES_NUMBER+1);
+	arg_due[0]='\0';
 
 	char *argv_exec[] = {
 		"./figlio",
