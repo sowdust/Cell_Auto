@@ -302,7 +302,7 @@ void	main(int argc, char* argv[])
 	msg_rspns* msg_to_proc = (msg_rspns*)malloc(sizeof(msg_rspns));
 	msg_rqst msg;
 
-
+	prctl(PR_SET_PDEATHSIG, SIGHUP);
 
 /************************************************************************/
 /*			REGOLE PREDEFINITE PER AUTOMA			*/
@@ -337,6 +337,7 @@ rule rules[] = { game_of_life,
 	
 
 	
+	signal(SIGHUP, uscendo);
 	signal(SIGINT, uscendo);
 	signal(SIGTERM, uscendo);
 
@@ -432,9 +433,9 @@ rule rules[] = { game_of_life,
 			{
 				if(*n_generazioni == 0)
 				{	
-					P(sem_id,0);
+					inuso=P(sem_id,0);
 					copy_matrix(shm,k,n_generazioni);
-					V(sem_id,0);
+					inuso=V(sem_id,0);
 				}
 				evolvi(shm,local_m,n_generazioni, curr_rule->rule_s, 
 					curr_rule->size_rule_s, curr_rule->rule_b, curr_rule->size_rule_b );
@@ -444,7 +445,9 @@ rule rules[] = { game_of_life,
 					*n_generazioni);
 					sleep(2);
 					inuso=P(sem_id,0);
-					init_matrix(shm,n_generazioni);
+					P(sem_id,0);
+					copy_matrix(shm,k,n_generazioni);
+					V(sem_id,0);
 					inuso=V(sem_id,0);
 				}
 			}
