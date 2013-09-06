@@ -3,33 +3,28 @@
 #include "header.h"
 #endif
 
-int	n, i;
-pid_t	p, q;
-char	c;
-short	rule_index;	// passata come argomento al figlio
-char *  argv_exec[3];
-char *  arg_due;
-
-void menu(int);
 
 void main(int argc, char* argv[])
 {
-	signal(SIGINT,menu);
-	signal(SIGHUP,menu);
+
+	
+	int	n, i;
+	pid_t	p, q;
+	char	c;
+	short	rule_index;	// passata come argomento al figlio
+	char *  argv_exec[4];
+	char *  arg_due;
+	char *  arg_tre;
+	int random = rand() % RLE_FILES_NUMBER+1; //random_in_range(1,RLE_FILES_NUMBER+1);
+
 	arg_due = (char*) malloc(sizeof(char)*2);
+	arg_tre = (char*) malloc(sizeof(char)*5);
 
 	//	come input si puo' dare il numero di processi cooperanti
 	if(argc<2)	n=N_PROC_DEFAULT;
 	else		n=atoi(argv[1]);
 
-	menu(0);
-}
-
-void menu(int a)
-{
-	do{
-
-		//	stampa menu
+			//	stampa menu
 		printf("Selezionare il tipo di automa da provare\n");
 		printf("[1]\tConway's Game of Life\n");
 		printf("[2]\t34Life\n");
@@ -43,16 +38,20 @@ void menu(int a)
 	
 		//	trasforma la scelta in una stringa
 		//	e sottrae uno 
-		arg_due[0]= c;
-		arg_due[1] = random_in_range(1,RLE_FILES_NUMBER+1);
-		arg_due[0]='\0';
-
+		
+		sprintf(arg_due,"%c",c);
+		sprintf(arg_tre,"%d",random);
+		
+		if( '6' == c )
+		{
+			printf("Selezionato casualmente file # %d \n",random);
+		}
+		
 		argv_exec[0] = "./figlio";
 		argv_exec[1] = arg_due;
-		argv_exec[2] =	NULL;
+		argv_exec[2] = arg_tre;
+		argv_exec[3] =	NULL;
 
-		printf("[%d]Processo generatore. Forkera' %d figli\n",getpid(),n);
-	
 		i=0;
 		while( ++i <= n)
 		{
@@ -70,7 +69,6 @@ void menu(int a)
 				}
 			}
 		}
-	}while( (q = wait(NULL)) >= 0 );
+	 while( (q = wait(NULL)) >= 0 )
 		printf("[padre:%d]: processo #%d terminato\n",getpid(),q);
-
 }

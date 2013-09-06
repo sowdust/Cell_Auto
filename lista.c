@@ -50,3 +50,13 @@ status remove_by_pid(lista* l,pid_t p) {
  	remove_by_pid(&((*l)->nxt),p);
  	return OK;
 }
+
+status remove_lista(lista* l) {
+	if((*l)==NULL)	return OK;
+ 	lista temp= (*l);
+	(*l)=(*l)->nxt;
+	free(temp);
+	remove_lista(&((*l)->nxt));
+   	return OK;
+}
+

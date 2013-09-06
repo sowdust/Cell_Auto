@@ -4,8 +4,6 @@
 #endif
 #include "rle_reader.h"
 #define N_FILES 10
-#define RLE_FILE_DIR "RLE/"
-#define RLE_FILE_EXT ".lif"
 
 
 
@@ -248,7 +246,7 @@ void	uscendo(int s)
 	msg2.p=getpid();
 	msg2.r=ADDIO;
 	msg2.type=ADDIO;
-	if ((msgsnd(qid_figlio_term,&msg2,sizeof(msg_rqst),0)) < 0)
+	if ((msgsnd(qid_figlio_term,&msg2,sizeof(msg_rqst)-sizeof(long),0)) < 0)
 		fprintf (stderr, "[%d]:Impossibile contattare GR\n%s\n",
 				getpid(),strerror(errno) );
 	if(inuso)
@@ -302,7 +300,6 @@ void	main(int argc, char* argv[])
 	msg_rspns* msg_to_proc = (msg_rspns*)malloc(sizeof(msg_rspns));
 	msg_rqst msg;
 
-	prctl(PR_SET_PDEATHSIG, SIGHUP);
 
 /************************************************************************/
 /*			REGOLE PREDEFINITE PER AUTOMA			*/
@@ -337,7 +334,6 @@ rule rules[] = { game_of_life,
 	
 
 	
-	signal(SIGHUP, uscendo);
 	signal(SIGINT, uscendo);
 	signal(SIGTERM, uscendo);
 
@@ -349,10 +345,10 @@ rule rules[] = { game_of_life,
 	if(argc < 3)	file_number = 1;
 	else		file_number = atoi(argv[2]);
 	curr_rule = (rule*) malloc (sizeof(rule));
+
 	if(rule_number == 5)
 	{
 		f = rendi_filename(file_number);
-		printf(" caricando file %s \n",f);
 
 		k = (short unsigned*) malloc (sizeof(short unsigned)*N_X*N_Y);
 		while( start(f,k,&curr_rule->size_rule_b, 
@@ -378,7 +374,7 @@ rule rules[] = { game_of_life,
 	//	richiede aggancio al GR tramite messaggio
 	msg.p=getpid();
 	msg.r=AGGANCIO;
-	if( (msgsnd(qid_to_gr,&msg,sizeof(msg_rqst),0)) < 0 ) 
+	if( (msgsnd(qid_to_gr,&msg,sizeof(msg_rqst)-sizeof(long),0)) < 0 ) 
 	{
 		fprintf (stderr, "Errore nell'invio messaggio di aggancio\n%s\n",
 				strerror(errno) );
@@ -397,7 +393,6 @@ rule rules[] = { game_of_life,
 		shm_id = msg_to_proc->shm_id; // shared matrix
 		sem_id = msg_to_proc->sem_id; // semaforo
 		sh_gen_id = msg_to_proc->sh_gen_id; // shared n_generazioni
-		printf("[%d] Agganciato al GR\n ", getpid());
 	}
 	
 	//	aggiunta mem condivisa in proprio spazio indirizzi

@@ -7,7 +7,14 @@
 #define PERMESSI_REPOSITORY 0642
 #define PERMESSI_SEMAFORI 0642
 #define FTOK_PATH "/usr"
+#define RLE_FILES_NUMBER 10
 
+#define RLE_FILE_DIR "RLE/"
+#define RLE_FILE_EXT ".lif"
+
+#define TERMINAL_GEOMETRY_FULL_SCREEN "160x48"
+#define TERMINAL_GEOMETRY_SMALL "90x30"
+#define TERMINAL_PATH "/usr/bin/xfce4-terminal"
 
 
 #if defined(__GNU_LIBRARY__) && !defined(_SEM_SEMUN_UNDEFINED)
@@ -70,6 +77,7 @@ typedef struct {
 	int sem_id;
 	int sh_gen_id;
 	int sh_rule_id;
+	pid_t pid_gr;
 }msg_rspns;
 
 typedef struct {

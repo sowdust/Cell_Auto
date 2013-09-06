@@ -36,3 +36,5 @@ void		fiat(int,int,short unsigned*);
 	simulando due dimensioni su un vettore unidimensionale
 */
 stato		get_stato(int, int, short unsigned*);
+
+void		termina_proc(lista,int);

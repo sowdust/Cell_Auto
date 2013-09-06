@@ -15,6 +15,7 @@ int shm_id,sem_id,sh_gen_id;
 short unsigned* shm;
 int* n_generazioni;
 int inuso = 0;
+pid_t pid_gr;
 
 
 
@@ -29,13 +30,13 @@ void riparti(int s)
 	clear();
 	mvprintw(row/2,(col-strlen(string))/2,"%s",string);
 	refresh();
-	sleep(1);
 	if(inuso)	inuso=V(sem_id,0);
-
-	inuso=P(sem_id,0);
-	init_matrix(shm,n_generazioni);
-	sleep(1);
-	inuso=V(sem_id,0);
+	// getppid() non funzionava
+	if(kill(pid_gr,SIGQUIT)!=0)
+	{
+		fprintf(stderr,"[%d]:Errore invio kill \n%s\n",
+		getpid(),strerror(errno) );	
+	}
 }
 
 
@@ -52,7 +53,7 @@ void esci(int s)
 	msg2.p=getpid();
 	msg2.r=ADDIO;
 	msg2.type=ADDIO;
-	if ((msgsnd(qid_figlio_term,&msg2,sizeof(msg_rqst),0)) < 0)
+	if ((msgsnd(qid_figlio_term,&msg2,sizeof(msg_rqst)-sizeof(long),0)) < 0)
 	{
 		fprintf(stderr,"[%d]:Errore avviso GR terminazione \n%s\n",
 		getpid(),strerror(errno) );
@@ -101,7 +102,7 @@ void main(int argc, char* argv[])
 	//	Invio richiesta di aggancio al GR
 
 	msg.p=getpid();	msg.r=AGGANCIO;
-	if((msgsnd(qid_to_gr,&msg,sizeof(msg_rqst),0))<0)
+	if((msgsnd(qid_to_gr,&msg,sizeof(msg_rqst)-sizeof(long),0))<0)
 	{
 		fprintf(stderr, "Errore nell'invio messaggio di aggancio\n%s\n",
 		strerror(errno) );
@@ -121,6 +122,7 @@ void main(int argc, char* argv[])
 		shm_id=msg_to_proc->shm_id;
 		sem_id=msg_to_proc->sem_id;
 		sh_gen_id=msg_to_proc->sh_gen_id;
+		pid_gr = msg_to_proc->pid_gr;
 
 		printf("[%d] Agganciato al GR\n",getpid());
 	}
