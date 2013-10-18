@@ -36,7 +36,9 @@ void riparti(int s)
 	{
 		fprintf(stderr,"[%d]:Errore invio kill \n%s\n",
 		getpid(),strerror(errno) );	
+
 	}
+	signal(SIGQUIT,riparti);
 }
 
 
@@ -60,6 +62,7 @@ void esci(int s)
 	}
 	endwin();
 	exit(EXIT_SUCCESS);
+
 }
 
 void main(int argc, char* argv[])

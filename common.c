@@ -95,8 +95,8 @@ void fiat(int x,int y,short unsigned* m)
 
 /*	funzione trovata in rete per il calcolo di un numero		*/
 /*	pseudo casuale all'interno dell'intervallo semi aperto		*/
-/*			[min,max)					*/
-/*				   autore presunto: Ryan Reich		*/
+/*		[min,max)												*/
+/*				  			 autore presunto: Ryan Reich		*/
 int random_in_range (unsigned int min, unsigned int max)	
 {
 	int base_random = rand();
@@ -113,9 +113,9 @@ int random_in_range (unsigned int min, unsigned int max)
 
 void termina_proc(lista l,int signal)
 {
-
 	if((l)==NULL) 	return ;
 
-       	kill((l)->p, signal);
-       	termina_proc((l)->nxt,signal);
+   	kill((l)->p, signal);
+   	termina_proc((l)->nxt,signal);
+	return ;
 }
