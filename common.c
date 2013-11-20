@@ -13,6 +13,7 @@ int P(int semid, int semnum)	// signal
 		cmd.sem_flg = 0;
 		semop(semid, &cmd, 1);
 		return 1;
+
 }
 
 
@@ -26,7 +27,32 @@ int V(int semid, int semnum)	// wait
 		return 0;
 }
 
+int Z(int semid, int semnum)	// wait for zero
+{
+		struct sembuf cmd;
+		cmd.sem_num = semnum;
+		cmd.sem_op = 0;
+		cmd.sem_flg = 0;
+		if(semop(semid, &cmd, 1) < 0)
+		{
+			fprintf (stderr, "Errore inizializzazione del semaforo\n%s\n",
+				strerror(errno) );
 
+		}
+		return 0;
+}
+
+int R(int semid, int semnum, int val)	// reset
+{
+
+	union semun arg;
+	arg.val = val;
+	if( semctl(semid,semnum,SETVAL,arg) == -1 )  
+	{
+		fprintf (stderr, "Errore inizializzazione del semaforo\n%s\n",
+				strerror(errno) );
+	}
+}
 
 stato get_stato(int x, int y, short unsigned* m)
 {

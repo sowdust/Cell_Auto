@@ -8,6 +8,8 @@
 */
 int		P(int, int );		// signal
 int		V(int, int);		// wait
+int		Z(int, int);		// wait 4 0
+int		R(int, int, int);	// reset
 
 /*
 	libreria per migliore pseudo casualita'

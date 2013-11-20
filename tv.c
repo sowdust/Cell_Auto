@@ -11,7 +11,7 @@ void esci(int);
 
 
 int qid_to_gr,qid_to_proc,qid_figlio_term;
-int shm_id,sem_id,sh_gen_id;
+int shm_id,sem_id,sh_gen_id,sem_id_counter;
 short unsigned* shm;
 int* n_generazioni;
 int inuso = 0;
@@ -123,6 +123,7 @@ void main(int argc, char* argv[])
 	} else
 	{
 		shm_id=msg_to_proc->shm_id;
+		sem_id_counter=msg_to_proc->sem_id_counter;
 		sem_id=msg_to_proc->sem_id;
 		sh_gen_id=msg_to_proc->sh_gen_id;
 		pid_gr = msg_to_proc->pid_gr;
@@ -160,16 +161,17 @@ void main(int argc, char* argv[])
 	refresh();	
 	sleep(3);
 	clear();
-
+	
 
 	while(1) {
+		R(sem_id_counter,0,N_PROC_DEFAULT);
 		attron(COLOR_PAIR(1));
 		mvprintw(0,0,"Premere Ctrl+\\ per azzerare la matrice");
 		attroff(COLOR_PAIR(1));
+		attron(COLOR_PAIR(2));
 		tot=0;
 		population=0;
-		attron(COLOR_PAIR(2));
-
+		
 		inuso = P(sem_id,0);
 
 		for(y=0;y<N_Y;++y)
@@ -201,6 +203,7 @@ void main(int argc, char* argv[])
 			*n_generazioni);
 		attroff(COLOR_PAIR(3));
 
+		Z(sem_id_counter,0);
 	}
 
 }

@@ -75,8 +75,11 @@ typedef struct {
 	richiesta r;
 	int shm_id;
 	int sem_id;
+	int sem_id_counter;
 	int sh_gen_id;
 	int sh_rule_id;
+	int start_x;
+	int portion;
 	pid_t pid_gr;
 }msg_rspns;
 

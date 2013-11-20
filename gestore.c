@@ -9,14 +9,30 @@ void	anelito(int);
 void	riparti(int);
 void	pulisci(void);
 void	main_main(void);
-int	create_matrix(void);
-int	crea_semaforo(int);
+int		create_matrix(void);
+int		crea_semaforo(int);
 void	check_pending( int sig, char *signame );
+
+int	assign_memory(int n_proc, int n_x, int * mem_alloc)
+{
+	int i;
+	int single_portion = n_x/n_proc;
+	for( i=0; i<n_proc; ++i)
+	{
+		*(mem_alloc + i) = i * single_portion;
+	}
+	if(!(n_x % n_proc))
+	{
+		*(mem_alloc + --i) = *(mem_alloc + i) + n_x % n_proc;
+	}
+	return single_portion;	
+}
 
 
 int x = N_X, y = N_Y;
 int n_proc=0;
-int* n_generazioni;
+int * n_generazioni;
+
 
 msg_rqst* m;
 msg_rqst* msg_figlio_term;
@@ -28,7 +44,8 @@ key_t k_att_figlio_term;
 
 pid_t pid_tv;
 pid_t pid_daddy;
-	
+
+
 char *argv_exec[] = {
         TERMINAL_PATH,
         "--geometry",
@@ -48,7 +65,7 @@ char *argv_daddy[] = {
 
 //	elementi IPC
 int	qid_to_gr, qid_to_proc, qid_figlio_term;
-int	shm_id, sem_id, sh_gen_id;
+int	shm_id, sem_id, sh_gen_id,sem_id_counter;
 
 //	matrice condivisa
 short unsigned* mat;
@@ -59,7 +76,8 @@ lista lista_processi = NULL;
 
 
 
-void check_pending( int sig, char *signame ) {
+void check_pending( int sig, char *signame )
+{
 
     sigset_t sigset;
 
@@ -137,6 +155,9 @@ void pulisci()
 	pid_daddy = -1;
 	
 		
+	if(semctl(sem_id_counter, 0, IPC_RMID, NULL)==-1)
+		fprintf (stderr, "Errore eliminazione semaforo\n%s\n",
+			strerror(errno) );
 	if(semctl(sem_id, 0, IPC_RMID, NULL)==-1)
 		fprintf (stderr, "Errore eliminazione semaforo\n%s\n",
 			strerror(errno) );
@@ -174,9 +195,10 @@ void riparti(int s)
 
 void main_main()
 {
-
-
-	
+	// in un array distribuiamo le aree di mem in fasce verticali divise
+	// fra i processi
+	int * memory_allocation = (int*)malloc(sizeof(int)*N_PROC_DEFAULT);
+	int	single_portion = assign_memory(N_PROC_DEFAULT, N_X, memory_allocation);
 	
 	k_att_rqsts=ftok(FTOK_PATH,'A');
 	k_att_rspns=ftok(FTOK_PATH,'B');
@@ -211,7 +233,7 @@ void main_main()
 
 	// creazione semaforo inizializzato a 1
 	sem_id = crea_semaforo(1);
-
+	sem_id_counter = crea_semaforo(0);
 
 	// fork per il processo tv
 	pid_tv = fork();
@@ -274,9 +296,12 @@ void main_main()
 				msg_to_proc.r=AGGANCIO;
 				msg_to_proc.type=m->p;
 				msg_to_proc.shm_id=shm_id;
+				msg_to_proc.sem_id_counter=sem_id_counter;
 				msg_to_proc.sem_id=sem_id;
 				msg_to_proc.sh_gen_id=sh_gen_id;
 				msg_to_proc.pid_gr=getpid();
+				msg_to_proc.portion=single_portion;
+				msg_to_proc.start_x=memory_allocation[n_proc];
 
 				//	risposta del gr
 				if( (msgsnd(qid_to_proc,&msg_to_proc,
@@ -287,7 +312,7 @@ void main_main()
 				} else
 				{
 					printf("Processo %d registrato al GR\n",
-					msg_to_proc.p);
+						msg_to_proc.p);
 					++n_proc;
 				}
 			} else

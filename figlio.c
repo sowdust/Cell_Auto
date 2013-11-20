@@ -21,7 +21,7 @@ int	inuso = 0;
 
 // 	elementi IPC
 int	qid_to_gr, qid_to_proc, qid_figlio_term;
-int	shm_id, sem_id, sh_gen_id;
+int	shm_id, sem_id, sh_gen_id,sem_id_counter;
 
 //	nome file per pattern
 char * 	f;
@@ -84,6 +84,7 @@ void	evolvi (short unsigned* shm, short unsigned* local,int* n_gen,
 	int x, y;
 	short vivi;
 	
+	P(sem_id_counter,0);
 	inuso=P(sem_id,0);
 	
 	for ( y=0; y < N_Y * N_X; ++y )
@@ -120,6 +121,7 @@ void	evolvi (short unsigned* shm, short unsigned* local,int* n_gen,
 
 
 	++(*n_gen);
+
 	inuso=V(sem_id,0);
 }
 
@@ -279,6 +281,7 @@ int	get_population(short unsigned* m)
 void	main(int argc, char* argv[])
 {
 	int x,y;
+	int start_x, stop_x;
 	int* n_generazioni;
 	short vivi;
 	short rule_number;
@@ -392,7 +395,10 @@ rule rules[] = { game_of_life,
 	{
 		shm_id = msg_to_proc->shm_id; // shared matrix
 		sem_id = msg_to_proc->sem_id; // semaforo
+		sem_id_counter = msg_to_proc->sem_id_counter;
 		sh_gen_id = msg_to_proc->sh_gen_id; // shared n_generazioni
+		start_x = msg_to_proc->start_x;
+		stop_x = start_x + msg_to_proc->portion;
 	}
 	
 	//	aggiunta mem condivisa in proprio spazio indirizzi
