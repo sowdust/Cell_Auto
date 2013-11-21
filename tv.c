@@ -146,9 +146,9 @@ void main(int argc, char* argv[])
 	initscr();	// avvia la sessione
 	cbreak();	// disabilita line buffering ma non se causano segnali
 	keypad(stdscr, TRUE);	// f1, f2.. per ora inutilizzato
-	noecho();	// intuitivo
+	//noecho();	// intuitivo
 	start_color();	// lapalissiano
-	curs_set(0);	// disabilita cursore
+	//curs_set(0);	// disabilita cursore
 
 	init_pair(1, COLOR_BLACK, COLOR_CYAN);
 	init_pair(2, COLOR_WHITE, COLOR_BLUE);
@@ -164,9 +164,80 @@ void main(int argc, char* argv[])
 	refresh();	
 	sleep(3);
 	clear();
-	
+
+
+	WINDOW *evolving_win;
+	int highlight_x = 0;
+	int highlight_y = 0;
+
+	int evolving = 0;
+	int c = 0;
+
+	evolving_win = newwin(N_Y, N_X, 4, (col-N_X)/2 );
+	keypad(evolving_win, TRUE);
+	box(evolving_win, -1, -1);
+
+
+
+//	MATRIX INITIALIZATION (USER)
+
+	while( c != 10 ) // 10 := ENTER
+	{
+		c = getch();	
+		mvwprintw(evolving_win,highlight_y,highlight_x," ");
+
+		switch(c)
+		{
+			case KEY_UP:
+				if(highlight_y==0)	highlight_y=N_Y-1;
+				else				--highlight_y;
+				break;
+			case KEY_DOWN:
+				if(highlight_y==N_Y-1)	highlight_y=0;
+				else					++highlight_y;
+				break;
+			case KEY_RIGHT:
+				if(highlight_x==N_X-1)	highlight_x=0;
+				else					++highlight_x;
+				break;
+			case KEY_LEFT:
+				if(highlight_x==0)	highlight_x=N_X-1;
+				else				--highlight_x;
+				break;
+			case 32:	// backspace
+				if(get_stato(highlight_x,highlight_y,shm) == VIVO)
+					uccidi(highlight_x,highlight_y,shm);
+				else
+					fiat(highlight_x,highlight_y,shm);
+				break;
+			default:
+				mvwprintw(evolving_win,5,5,"this key is: %d",c);
+
+		}
+		wattron(evolving_win, A_REVERSE);
+		mvwprintw(evolving_win,highlight_y,highlight_x," ");
+		wattroff(evolving_win, A_REVERSE);
+		mvwprintw(evolving_win,3,3,"(%d,%d)",highlight_x,highlight_y);
+		for(y=0;y<N_Y;++y)
+		{
+			for(x=0;x<N_X;++x)
+			{
+				if(get_stato(x,y,shm)==VIVO)
+				{
+					mvwprintw(evolving_win,y,x,"X");
+				}
+			}
+		}
+		wrefresh(evolving_win);
+	}
+
+	noecho();	// intuitivo
+	curs_set(0);	// disabilita cursore
+
+//	MATRIX EVOLUTION (GESTORE)
 
 	while(1) {
+
 		R(sem_id_counter,0,N_PROC_DEFAULT);
 		attron(COLOR_PAIR(1));
 		mvprintw(0,0,"Premere Ctrl+\\ per azzerare la matrice");
