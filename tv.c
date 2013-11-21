@@ -11,8 +11,9 @@ void esci(int);
 
 
 int qid_to_gr,qid_to_proc,qid_figlio_term;
-int shm_id,sem_id,sh_gen_id,sem_id_counter;
+int shm_id,shm_id_copy,sem_id,sh_gen_id,sem_id_counter;
 short unsigned* shm;
+short unsigned* shm_copy;
 int* n_generazioni;
 int inuso = 0;
 pid_t pid_gr;
@@ -123,6 +124,7 @@ void main(int argc, char* argv[])
 	} else
 	{
 		shm_id=msg_to_proc->shm_id;
+		shm_id_copy=msg_to_proc->shm_id_copy;
 		sem_id_counter=msg_to_proc->sem_id_counter;
 		sem_id=msg_to_proc->sem_id;
 		sh_gen_id=msg_to_proc->sh_gen_id;
@@ -134,6 +136,7 @@ void main(int argc, char* argv[])
 	//	Aggancio memoria condivisa
 	
 	shm = shmat(shm_id,NULL,0);
+	shm_copy = shmat(shm_id_copy,NULL,0);
 	n_generazioni = shmat(sh_gen_id,NULL,0);
 
 
@@ -185,8 +188,10 @@ void main(int argc, char* argv[])
 				{
 					addch(ACS_DIAMOND);
 					++population;
+					fiat(x,y,shm_copy);
 				} else {
 					addch(' ');
+					uccidi(x,y,shm_copy);
 				}
 				refresh();
 				++tot;
@@ -200,7 +205,7 @@ void main(int argc, char* argv[])
 		mvprintw(1,(col-strlen(string))/2,
 			"Popolazione: %d su %d ",population,tot);
 		mvprintw(2,(col-strlen(string))/2," Generazione: %d ",
-			*n_generazioni);
+			(*n_generazioni)++);
 		attroff(COLOR_PAIR(3));
 
 		Z(sem_id_counter,0);

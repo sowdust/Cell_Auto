@@ -19,9 +19,11 @@ int	in_stallo(short unsigned*, short unsigned*);
 //	se in sezione critica = 1
 int	inuso = 0;
 
+int start_x, stop_x;
+
 // 	elementi IPC
 int	qid_to_gr, qid_to_proc, qid_figlio_term;
-int	shm_id, sem_id, sh_gen_id,sem_id_counter;
+int	shm_id, shm_id_copy, sem_id, sh_gen_id,sem_id_counter;
 
 //	nome file per pattern
 char * 	f;
@@ -81,20 +83,17 @@ void	evolvi (short unsigned* shm, short unsigned* local,int* n_gen,
 		short* s,short size_s,short* b,short size_b)
 {
 
+	printf("[gen # %d] evolving banda %d - %d\n",*n_gen,start_x,stop_x);
+	int old_gen = *n_gen;
 	int x, y;
 	short vivi;
 	
 	P(sem_id_counter,0);
 	inuso=P(sem_id,0);
 	
-	for ( y=0; y < N_Y * N_X; ++y )
-	{ // copia la situazione corrente in array locale
-		local[y]=shm[y];
-	}
-
 	for( y=0; y < N_Y; ++y )
 	{
-		for( x=0; x < N_X; ++x )
+		for( x=start_x; x <= stop_x; ++x )
 		{
 			vivi=vicini_vivi(x,y,local);
 
@@ -118,11 +117,9 @@ void	evolvi (short unsigned* shm, short unsigned* local,int* n_gen,
 			}
 		}
 	}
-
-
-	++(*n_gen);
-
 	inuso=V(sem_id,0);
+
+	while(old_gen == *n_gen && old_gen) ;
 }
 
 
@@ -281,7 +278,6 @@ int	get_population(short unsigned* m)
 void	main(int argc, char* argv[])
 {
 	int x,y;
-	int start_x, stop_x;
 	int* n_generazioni;
 	short vivi;
 	short rule_number;
@@ -394,6 +390,7 @@ rule rules[] = { game_of_life,
 	} else
 	{
 		shm_id = msg_to_proc->shm_id; // shared matrix
+		shm_id_copy = msg_to_proc->shm_id_copy; // shared matrix
 		sem_id = msg_to_proc->sem_id; // semaforo
 		sem_id_counter = msg_to_proc->sem_id_counter;
 		sh_gen_id = msg_to_proc->sh_gen_id; // shared n_generazioni
@@ -402,7 +399,8 @@ rule rules[] = { game_of_life,
 	}
 	
 	//	aggiunta mem condivisa in proprio spazio indirizzi
-	if((shm = shmat(shm_id,NULL,0)) < 0 )
+	if( ( (shm = shmat(shm_id,NULL,0)) < 0 )
+	||  ( (local_m = shmat(shm_id_copy,NULL,0) ) < 0) )
 	{
 		fprintf (stderr, "[%d] Errore agganciando matrice condivisa\n",
 			getpid(),strerror(errno) );
@@ -458,7 +456,7 @@ rule rules[] = { game_of_life,
 			{
 				evolvi(shm,local_m,n_generazioni, curr_rule->rule_s, 
 					curr_rule->size_rule_s, curr_rule->rule_b, curr_rule->size_rule_b );
-				if(in_stallo(local_m,shm))
+				if(in_stallo(local_m,shm) && false)
 				{
 					printf("Stallo alla generazione %d \n",
 					*n_generazioni);

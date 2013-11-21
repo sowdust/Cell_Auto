@@ -65,10 +65,11 @@ char *argv_daddy[] = {
 
 //	elementi IPC
 int	qid_to_gr, qid_to_proc, qid_figlio_term;
-int	shm_id, sem_id, sh_gen_id,sem_id_counter;
+int	shm_id, shm_id_copy, sem_id, sh_gen_id,sem_id_counter;
 
 //	matrice condivisa
 short unsigned* mat;
+short unsigned* mat_copy;
 
 //	lista processi agganciati (figli e tv)
 lista lista_processi = NULL;
@@ -132,6 +133,7 @@ void anelito(int s)
 	pulisci();
 
 	if((shmctl(shm_id, IPC_RMID, NULL) == -1)
+		|| (shmctl(shm_id_copy, IPC_RMID, NULL) == -1)
 		|| (shmctl(sh_gen_id, IPC_RMID, NULL) == -1))
 		fprintf (stderr, "Errore eliminazione mem condivisa\n%s\n",
 			strerror(errno) );
@@ -207,6 +209,11 @@ void main_main()
 
 	// inizializzazione universo
 	init_matrix(mat,n_generazioni);
+	// copia contenuto in matrice copia
+	for ( y=0; y < N_Y * N_X; ++y )
+	{ 
+		mat_copy[y]=mat[y];
+	}
 
 
 	// creazione code messaggi
@@ -296,6 +303,7 @@ void main_main()
 				msg_to_proc.r=AGGANCIO;
 				msg_to_proc.type=m->p;
 				msg_to_proc.shm_id=shm_id;
+				msg_to_proc.shm_id_copy=shm_id_copy;
 				msg_to_proc.sem_id_counter=sem_id_counter;
 				msg_to_proc.sem_id=sem_id;
 				msg_to_proc.sh_gen_id=sh_gen_id;
@@ -364,7 +372,9 @@ void main(int argc, char* argv[])
 
 	// agganciamento a matrice condivisa
 	shm_id = create_matrix();
+	shm_id_copy = create_matrix();
 	mat = shmat(shm_id,NULL,0);
+	mat_copy = shmat(shm_id_copy,NULL,0);
 
 
 

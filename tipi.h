@@ -74,6 +74,7 @@ typedef struct {
 	pid_t p;
 	richiesta r;
 	int shm_id;
+	int shm_id_copy;
 	int sem_id;
 	int sem_id_counter;
 	int sh_gen_id;
