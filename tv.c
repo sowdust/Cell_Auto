@@ -175,7 +175,14 @@ void main(int argc, char* argv[])
 
 	evolving_win = newwin(N_Y, N_X, 4, (col-N_X)/2 );
 	keypad(evolving_win, TRUE);
-	box(evolving_win, -1, -1);
+	box(evolving_win, 0, 0);
+	
+	// stampa istruzioni
+	mvprintw(0,0,"Muoversi con le frecce all interno della griglia");
+	mvprintw(1,0,"Premere lo spazio per cambiare stato a una cella");
+	mvprintw(2,0,"Premere Invio per dare inizio all' evoluzione");
+	mvprintw(3,0,"Premere Esc per uscire");
+	refresh();
 
 
 
@@ -210,14 +217,14 @@ void main(int argc, char* argv[])
 				else
 					fiat(highlight_x,highlight_y,shm);
 				break;
-			default:
-				mvwprintw(evolving_win,5,5,"this key is: %d",c);
+			case 27:	// esc
+				esci(0);
+			default: break;
 
 		}
 		wattron(evolving_win, A_REVERSE);
 		mvwprintw(evolving_win,highlight_y,highlight_x," ");
 		wattroff(evolving_win, A_REVERSE);
-		mvwprintw(evolving_win,3,3,"(%d,%d)",highlight_x,highlight_y);
 		for(y=0;y<N_Y;++y)
 		{
 			for(x=0;x<N_X;++x)
@@ -233,6 +240,8 @@ void main(int argc, char* argv[])
 
 	noecho();	// intuitivo
 	curs_set(0);	// disabilita cursore
+	clear();
+	refresh();
 
 //	MATRIX EVOLUTION (GESTORE)
 
