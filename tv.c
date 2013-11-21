@@ -61,6 +61,12 @@ void esci(int s)
 		fprintf(stderr,"[%d]:Errore avviso GR terminazione \n%s\n",
 		getpid(),strerror(errno) );
 	}
+	if(kill(pid_gr,SIGINT)!=0)
+	{
+		fprintf(stderr,"[%d]:Errore invio kill \n%s\n",
+		getpid(),strerror(errno) );	
+
+	}
 	endwin();
 	exit(EXIT_SUCCESS);
 
