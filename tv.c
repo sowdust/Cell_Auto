@@ -7,6 +7,7 @@
 
 void riparti(int);
 void esci(int);
+void init_manually (int, int, int);
 
 
 
@@ -46,11 +47,8 @@ void riparti(int s)
 void esci(int s)
 {
 	char * string;
-	int row, col;
-	getmaxyx(stdscr,row,col);
 	
 	clear();
-	mvprintw(row/2,(col-strlen(string))/2,"Addio");
 	refresh();
 	msg_rqst msg2;
 	msg2.p=getpid();
@@ -61,7 +59,7 @@ void esci(int s)
 		fprintf(stderr,"[%d]:Errore avviso GR terminazione \n%s\n",
 		getpid(),strerror(errno) );
 	}
-	if(kill(pid_gr,SIGINT)!=0)
+	if(kill(pid_gr,SIGINT)!=0 && kill(pid_gr,SIGTERM)!=0)
 	{
 		fprintf(stderr,"[%d]:Errore invio kill \n%s\n",
 		getpid(),strerror(errno) );	
@@ -94,6 +92,7 @@ void main(int argc, char* argv[])
 
 	//	Gestione segnali
 	
+	signal(SIGTERM,esci);
 	signal(SIGINT,esci);
 	signal(SIGQUIT,riparti);
 
@@ -152,26 +151,87 @@ void main(int argc, char* argv[])
 	initscr();	// avvia la sessione
 	cbreak();	// disabilita line buffering ma non se causano segnali
 	keypad(stdscr, TRUE);	// f1, f2.. per ora inutilizzato
-	//noecho();	// intuitivo
+	noecho();	// intuitivo
 	start_color();	// lapalissiano
-	//curs_set(0);	// disabilita cursore
+	curs_set(0);	// disabilita cursore
 
 	init_pair(1, COLOR_BLACK, COLOR_CYAN);
 	init_pair(2, COLOR_WHITE, COLOR_BLUE);
 	init_pair(3, COLOR_WHITE, COLOR_BLACK);
 
 	getmaxyx(stdscr,row,col);
-	string=" The Game of Life ";
+	//string=" The Game of Life ";
 
-	attron(A_STANDOUT);
-	mvprintw(row/2,(col-strlen(string))/2,"%s",string);
-	attroff(A_STANDOUT);
+	//attron(A_STANDOUT);
+	//mvprintw(row/2,(col-strlen(string))/2,"%s",string);
+	//attroff(A_STANDOUT);
 
 	refresh();	
-	sleep(3);
 	clear();
 
 
+	if( get_init_choice(col,row) )
+	{
+		clean_matrix(shm,n_generazioni);
+		init_manually(col,y,x);
+	}
+
+	clear();
+	refresh();
+
+//	MATRIX EVOLUTION (GESTORE)
+	while( 1 )
+	{
+		R(sem_id_counter,0,N_PROC_DEFAULT);
+		attron(COLOR_PAIR(1));
+		mvprintw(0,0,"Premere Ctrl+\\ per azzerare la matrice");
+		attroff(COLOR_PAIR(1));
+		attron(COLOR_PAIR(2));
+		tot=0;
+		population=0;
+		
+		inuso = P(sem_id,0);
+
+		for(y=0;y<N_Y;++y)
+		{
+			//	spostati al centro a sinistra
+			move(4+y,(col-N_X)/2);
+
+			for(x=0;x<N_X;++x)
+			{
+				if(get_stato(x,y,shm)==VIVO)
+				{
+					addch(ACS_DIAMOND);
+					++population;
+					fiat(x,y,shm_copy);
+				} else {
+					addch(' ');
+					uccidi(x,y,shm_copy);
+				}
+				refresh();
+				++tot;
+			}
+			printw("\n");
+		}
+		inuso = V(sem_id,0);
+
+		attroff(COLOR_PAIR(2));
+		attron(COLOR_PAIR(3));
+		mvprintw(1,(col-50)/2,
+			"Popolazione: %d su %d ",population,tot);
+		mvprintw(2,(col-50)/2," Generazione: %d ",
+			(*n_generazioni)++);
+		attroff(COLOR_PAIR(3)); 
+
+		Z(sem_id_counter,0); 
+	}
+
+}
+
+void init_manually (int col, int y, int x) 
+{
+	clear();
+	refresh();
 	WINDOW *evolving_win;
 	int highlight_x = 0;
 	int highlight_y = 0;
@@ -248,53 +308,42 @@ void main(int argc, char* argv[])
 	curs_set(0);	// disabilita cursore
 	clear();
 	refresh();
+}
 
-//	MATRIX EVOLUTION (GESTORE)
 
-	while(1) {
 
-		R(sem_id_counter,0,N_PROC_DEFAULT);
-		attron(COLOR_PAIR(1));
-		mvprintw(0,0,"Premere Ctrl+\\ per azzerare la matrice");
-		attroff(COLOR_PAIR(1));
-		attron(COLOR_PAIR(2));
-		tot=0;
-		population=0;
-		
-		inuso = P(sem_id,0);
+int get_init_choice (int col, int y, int x) 
+{
+	int c;
+	clear();
+	refresh();
 
-		for(y=0;y<N_Y;++y)
+	// stampa istruzioni
+	mvprintw(5,5,"Selezionare nella finestra a fianco il tipo di evoluzione");
+	mvprintw(7,5,"Scegliere in che modo inizializzare l'universo e premere il tasto corrispondente");
+	mvprintw(9,5,"[M] Manuale: selezionare le celle vive da tastiera");
+	mvprintw(11,5,"[R] Random: casuale con probabilita' 50%");
+	mvprintw(13,5,"In ogni momento, premere Ctrl+C per uscire");
+	refresh();
+
+	while( c = getch() ) 
+	{
+		mvprintw(15,5,"Premuto %d",c);
+		switch(c)
 		{
-			//	spostati al centro a sinistra
-			move(4+y,(col-N_X)/2);
-
-			for(x=0;x<N_X;++x)
-			{
-				if(get_stato(x,y,shm)==VIVO)
-				{
-					addch(ACS_DIAMOND);
-					++population;
-					fiat(x,y,shm_copy);
-				} else {
-					addch(' ');
-					uccidi(x,y,shm_copy);
-				}
-				refresh();
-				++tot;
-			}
-			printw("\n");
+			case 114:
+				return 0;
+				break;
+			case 109:
+				return 1;
+				break;
+			default:
+				mvprintw(15,5,"Opzione  %c non valida");
+				break;
 		}
-		inuso = V(sem_id,0);
-
-		attroff(COLOR_PAIR(2));
-		attron(COLOR_PAIR(3));
-		mvprintw(1,(col-strlen(string))/2,
-			"Popolazione: %d su %d ",population,tot);
-		mvprintw(2,(col-strlen(string))/2," Generazione: %d ",
-			(*n_generazioni)++);
-		attroff(COLOR_PAIR(3));
-
-		Z(sem_id_counter,0);
+	
 	}
 
+	return 0;
 }
+

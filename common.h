@@ -23,6 +23,7 @@ short		in_array(short, short*, short);
 /*
 	inizializza matrice in modo casuale
 */
+void		clean_matrix(short unsigned*,int*);
 void		init_matrix(short unsigned*,int*);
 void copy_matrix(short unsigned*, short unsigned*, int*);
 

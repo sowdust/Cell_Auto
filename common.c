@@ -87,6 +87,13 @@ short in_array(short n,short* a,short size)
 	return 0;	
 }
 
+void clean_matrix(short unsigned* m,int* n_gen)
+{
+	*n_gen=0;
+	int i;
+	for(i=0;i<N_X*N_Y;i++)
+	{	m[i]=0;		}
+}
 void init_matrix(short unsigned* m,int* n_gen)
 {
 	*n_gen=0;
@@ -95,7 +102,7 @@ void init_matrix(short unsigned* m,int* n_gen)
 		if( random_in_range(0,RAND_MAX) % 2 == 0 )
 			m[i]=0;
 		else
-			m[i]=0;
+			m[i]=1;
 	}
 }
 
