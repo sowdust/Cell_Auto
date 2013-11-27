@@ -17,15 +17,19 @@ int		R(int, int, int);	// reset
 */
 int		random_in_range (unsigned int, unsigned int);
 
-
-short		in_array(short, short*, short);
+/*
+	check if two universes have same config
+*/
+int		are_equal(short unsigned *, short unsigned *, int);
+void	copia_universi(short unsigned*, short unsigned*, int);
+short	in_array(short, short*, short);
 
 /*
 	inizializza matrice in modo casuale
 */
-void		clean_matrix(short unsigned*,int*);
-void		init_matrix(short unsigned*,int*);
-void copy_matrix(short unsigned*, short unsigned*, int*);
+void	clean_matrix(short unsigned*,int*);
+void	init_matrix(short unsigned*,int*);
+void	copy_matrix(short unsigned*, short unsigned*, int*);
 
 /*
 	imposta a 1 (vivo) o 0 (morto) lo stato di una cella

@@ -21,7 +21,6 @@ pid_t pid_gr;
 
 
 
-
 void riparti(int s)
 {
 	char* string="Big bang in corso...";
@@ -83,13 +82,20 @@ void main(int argc, char* argv[])
 	
 	char ch;
 	char* string;
-	
+
 	short vivi;
 
 	int population, tot;
 	int row, col, x, y;
+	int stable_at = -1;
 
+	//	Matrices to check for periodic situa
+	short unsigned* periodic_1 = (short unsigned*) malloc(sizeof(short
+		unsigned)*N_X*N_Y);
+	short unsigned* periodic_2 = (short unsigned*) malloc(sizeof(short
+		unsigned)*N_X*N_Y);
 
+	
 	//	Gestione segnali
 	
 	signal(SIGTERM,esci);
@@ -192,6 +198,16 @@ void main(int argc, char* argv[])
 		
 		inuso = P(sem_id,0);
 
+		// COPIAMO UNIVERSO IN PERIODIC
+		if(*n_generazioni % 2 == 0)
+		{
+			copia_universi(shm_copy,periodic_1,N_X*N_Y);
+		}
+		else
+		{
+			copia_universi(shm_copy,periodic_2,N_X*N_Y);
+		}
+
 		for(y=0;y<N_Y;++y)
 		{
 			//	spostati al centro a sinistra
@@ -223,7 +239,26 @@ void main(int argc, char* argv[])
 			(*n_generazioni)++);
 		attroff(COLOR_PAIR(3)); 
 
-		Z(sem_id_counter,0); 
+		// SE LA SITUAZIONE PERIODIC SCRIVIAMOLO
+
+		if	( (	(are_equal(shm_copy,periodic_1,N_X*N_Y) == 1)
+			||	(are_equal(shm_copy,periodic_2,N_X*N_Y) == 1) )
+			&& *n_generazioni > 2 
+			)
+		{
+			if(stable_at < 0)
+			{
+				stable_at = *n_generazioni;
+			}
+			attron(A_STANDOUT);
+			mvprintw(1,col-30,"Situazione periodica alla ");
+			mvprintw(2,col-30,"generazione %d            ",stable_at);
+			attroff(A_STANDOUT);
+		}
+		else
+		{
+			Z(sem_id_counter,0); 
+		}
 	}
 
 }

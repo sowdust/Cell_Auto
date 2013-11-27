@@ -5,6 +5,20 @@
 
 int sem_id; // usata in funzioni che richimano P e V
 
+int are_equal(short unsigned * a, short unsigned * b, int size)
+{
+	int i;
+	
+	for( i = 0; i < size; ++i )
+	{
+		if( *(a+i) != *(b+i) )	return -1;
+	}
+
+	return 1;
+}
+
+
+
 int P(int semid, int semnum)	// signal
 {
 		struct sembuf cmd;
@@ -103,6 +117,16 @@ void init_matrix(short unsigned* m,int* n_gen)
 			m[i]=0;
 		else
 			m[i]=1;
+	}
+}
+
+void copia_universi(short unsigned* m,short unsigned* k,int size)
+{
+	int i;
+
+	for(i=0;i<N_X*N_Y;i++)
+	{
+		k[i]=m[i];
 	}
 }
 

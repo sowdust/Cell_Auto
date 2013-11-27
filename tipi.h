@@ -8,6 +8,7 @@
 #define PERMESSI_SEMAFORI 0642
 #define FTOK_PATH "/usr"
 #define RLE_FILES_NUMBER 10
+#define N_PERIOD_TO_CHECK 5
 
 #define RLE_FILE_DIR "RLE/"
 #define RLE_FILE_EXT ".lif"
