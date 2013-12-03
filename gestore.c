@@ -65,7 +65,7 @@ char *argv_daddy[] = {
 
 //	elementi IPC
 int	qid_to_gr, qid_to_proc, qid_figlio_term;
-int	shm_id, shm_id_copy, sem_id, sh_gen_id,sem_id_counter;
+int	shm_id, shm_id_copy, sem_id, sh_gen_id,sem_id_counter, sem_id_2;
 
 //	matrice condivisa
 short unsigned* mat;
@@ -157,6 +157,9 @@ void pulisci()
 	pid_daddy = -1;
 	
 		
+	if(semctl(sem_id_2, 0, IPC_RMID, NULL)==-1)
+		fprintf (stderr, "Errore eliminazione semaforo\n%s\n",
+			strerror(errno) );
 	if(semctl(sem_id_counter, 0, IPC_RMID, NULL)==-1)
 		fprintf (stderr, "Errore eliminazione semaforo\n%s\n",
 			strerror(errno) );
@@ -208,12 +211,12 @@ void main_main()
 
 
 	// inizializzazione universo
-	init_matrix(mat,n_generazioni);
+	///init_matrix(mat,n_generazioni);
 	// copia contenuto in matrice copia
-	for ( y=0; y < N_Y * N_X; ++y )
+	/*for ( y=0; y < N_Y * N_X; ++y )
 	{ 
 		mat_copy[y]=mat[y];
-	}
+	}*/
 
 
 	// creazione code messaggi
@@ -239,6 +242,7 @@ void main_main()
 	}
 
 	// creazione semaforo inizializzato a 1
+	sem_id_2 = crea_semaforo(0);
 	sem_id = crea_semaforo(1);
 	sem_id_counter = crea_semaforo(0);
 
@@ -305,6 +309,7 @@ void main_main()
 				msg_to_proc.shm_id=shm_id;
 				msg_to_proc.shm_id_copy=shm_id_copy;
 				msg_to_proc.sem_id_counter=sem_id_counter;
+				msg_to_proc.sem_id_2=sem_id_2;
 				msg_to_proc.sem_id=sem_id;
 				msg_to_proc.sh_gen_id=sh_gen_id;
 				msg_to_proc.pid_gr=getpid();

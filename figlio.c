@@ -18,18 +18,17 @@ int	in_stallo(short unsigned*, short unsigned*);
 
 //	se in sezione critica = 1
 int	inuso = 0;
-
 int start_x, stop_x;
 
 // 	elementi IPC
 int	qid_to_gr, qid_to_proc, qid_figlio_term;
-int	shm_id, shm_id_copy, sem_id, sh_gen_id,sem_id_counter;
+int	shm_id, shm_id_copy, sem_id, sh_gen_id,sem_id_counter,sem_id_2;
 
 //	nome file per pattern
 char * 	f;
 
 
-
+//	DEPRECATED
 int	in_stallo(short unsigned* m, short unsigned* local)
 {	// teoricamente scorretta con piu processi visto che intercorre
 	// del tempo tra la chiamata di V della funzione di evoluzione
@@ -83,8 +82,6 @@ void	evolvi (short unsigned* shm, short unsigned* local,int* n_gen,
 		short* s,short size_s,short* b,short size_b)
 {
 
-	printf("[gen # %d] evolving banda %d - %d\n",*n_gen,start_x,stop_x);
-	int old_gen = *n_gen;
 	int x, y;
 	short vivi;
 	
@@ -93,7 +90,7 @@ void	evolvi (short unsigned* shm, short unsigned* local,int* n_gen,
 	
 	for( y=0; y < N_Y; ++y )
 	{
-		for( x=start_x; x <= stop_x; ++x )
+		for( x=start_x; x < stop_x; ++x )
 		{
 			vivi=vicini_vivi(x,y,local);
 
@@ -112,14 +109,14 @@ void	evolvi (short unsigned* shm, short unsigned* local,int* n_gen,
 						uccidi(x,y,shm);
 					break;
 				default:	// ?
-					;
+					printf("ERROR");
 					break;
 			}
 		}
 	}
+	
 	inuso=V(sem_id,0);
-
-	while(old_gen == *n_gen && old_gen) ;
+	//Z(sem_id_counter,0);
 }
 
 
@@ -391,6 +388,7 @@ rule rules[] = { game_of_life,
 	{
 		shm_id = msg_to_proc->shm_id; // shared matrix
 		shm_id_copy = msg_to_proc->shm_id_copy; // shared matrix
+		sem_id_2 = msg_to_proc->sem_id_2; // semaforo
 		sem_id = msg_to_proc->sem_id; // semaforo
 		sem_id_counter = msg_to_proc->sem_id_counter;
 		sh_gen_id = msg_to_proc->sh_gen_id; // shared n_generazioni

@@ -12,7 +12,7 @@ void init_manually (int, int, int);
 
 
 int qid_to_gr,qid_to_proc,qid_figlio_term;
-int shm_id,shm_id_copy,sem_id,sh_gen_id,sem_id_counter;
+int shm_id,shm_id_copy,sem_id,sh_gen_id,sem_id_counter, sem_id_2;
 short unsigned* shm;
 short unsigned* shm_copy;
 int* n_generazioni;
@@ -137,6 +137,7 @@ void main(int argc, char* argv[])
 		shm_id=msg_to_proc->shm_id;
 		shm_id_copy=msg_to_proc->shm_id_copy;
 		sem_id_counter=msg_to_proc->sem_id_counter;
+		sem_id_2=msg_to_proc->sem_id_2;
 		sem_id=msg_to_proc->sem_id;
 		sh_gen_id=msg_to_proc->sh_gen_id;
 		pid_gr = msg_to_proc->pid_gr;
@@ -180,7 +181,12 @@ void main(int argc, char* argv[])
 	{
 		clean_matrix(shm,n_generazioni);
 		init_manually(col,y,x);
+	} else 
+	{
+		clean_matrix(shm,n_generazioni);
+		init_matrix(shm,n_generazioni);
 	}
+	copia_universi(shm,shm_copy,N_X*N_Y);
 
 	clear();
 	refresh();
@@ -188,14 +194,15 @@ void main(int argc, char* argv[])
 //	MATRIX EVOLUTION (GESTORE)
 	while( 1 )
 	{
-		R(sem_id_counter,0,N_PROC_DEFAULT);
 		attron(COLOR_PAIR(1));
-		mvprintw(0,0,"Premere Ctrl+\\ per azzerare la matrice");
+		mvprintw(0,0,"Premere Ctrl+C per uscire");
 		attroff(COLOR_PAIR(1));
 		attron(COLOR_PAIR(2));
 		tot=0;
 		population=0;
 		
+		
+		// UNA VOLTA CHE TUTTI HANNO FINITO, COMINCIA
 		inuso = P(sem_id,0);
 
 		// COPIAMO UNIVERSO IN PERIODIC
@@ -219,31 +226,29 @@ void main(int argc, char* argv[])
 				{
 					addch(ACS_DIAMOND);
 					++population;
-					fiat(x,y,shm_copy);
+					//fiat(x,y,shm_copy);
 				} else {
 					addch(' ');
-					uccidi(x,y,shm_copy);
+					//uccidi(x,y,shm_copy);
 				}
-				refresh();
 				++tot;
 			}
 			printw("\n");
 		}
-		inuso = V(sem_id,0);
 
 		attroff(COLOR_PAIR(2));
 		attron(COLOR_PAIR(3));
 		mvprintw(1,(col-50)/2,
 			"Popolazione: %d su %d ",population,tot);
 		mvprintw(2,(col-50)/2," Generazione: %d ",
-			(*n_generazioni)++);
+			++(*n_generazioni));
 		attroff(COLOR_PAIR(3)); 
 
 		// SE LA SITUAZIONE PERIODIC SCRIVIAMOLO
 
-		if	( (	(are_equal(shm_copy,periodic_1,N_X*N_Y) == 1)
-			||	(are_equal(shm_copy,periodic_2,N_X*N_Y) == 1) )
-			&& *n_generazioni > 2 
+		if	( (	(are_equal(shm,periodic_1,N_X*N_Y) == 1)
+			||	(are_equal(shm,periodic_2,N_X*N_Y) == 1) )
+			&& *n_generazioni > 2  
 			)
 		{
 			if(stable_at < 0)
@@ -257,8 +262,16 @@ void main(int argc, char* argv[])
 		}
 		else
 		{
-			Z(sem_id_counter,0); 
+			;
 		}
+	
+		//	REFRESH SCHERMO
+		refresh();
+		R(sem_id_counter,0,N_PROC_DEFAULT);
+		copia_universi(shm,shm_copy,N_X*N_Y);
+		inuso = V(sem_id,0);
+		Z(sem_id_counter,0); 
+		
 	}
 
 }
@@ -373,7 +386,7 @@ int get_init_choice (int col, int y, int x)
 				return 1;
 				break;
 			default:
-				mvprintw(15,5,"Opzione  %c non valida");
+				mvprintw(15,5,"Opzione  %c non valida",c);
 				break;
 		}
 	

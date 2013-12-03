@@ -113,7 +113,7 @@ void init_matrix(short unsigned* m,int* n_gen)
 	*n_gen=0;
 	int i;
 	for(i=0;i<N_X*N_Y;i++) {
-		if( random_in_range(0,RAND_MAX) % 2 == 0 )
+		if( random_in_range(0,RAND_MAX) % 3 == 0 )
 			m[i]=0;
 		else
 			m[i]=1;

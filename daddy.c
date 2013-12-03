@@ -30,8 +30,8 @@ void main(int argc, char* argv[])
 		printf("[2]\t34Life\n");
 		printf("[3]\tHigh Life\n");
 		printf("[4]\tDay and Night\n");
-		printf("[5]\tEmulatore automa unidimensionale triangolo di Sierpinski\n");
-		printf("[6]\tPattern casuale da file\n");
+//		printf("[5]\tEmulatore automa unidimensionale triangolo di Sierpinski\n");
+//		printf("[6]\tPattern casuale da file\n");
 		printf("[0]\tUscire\n");
 
 		if( (c = getchar()) == '0' ) exit(EXIT_SUCCESS);

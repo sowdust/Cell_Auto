@@ -2,7 +2,7 @@
 #define N_X 130
 #define N_Y 43
 #define BUFFER_PIENO -1
-#define N_PROC_DEFAULT 5
+#define N_PROC_DEFAULT 1 
 #define PERMESSI_CODA 0666
 #define PERMESSI_REPOSITORY 0642
 #define PERMESSI_SEMAFORI 0642
@@ -77,6 +77,7 @@ typedef struct {
 	int shm_id;
 	int shm_id_copy;
 	int sem_id;
+	int sem_id_2;
 	int sem_id_counter;
 	int sh_gen_id;
 	int sh_rule_id;
