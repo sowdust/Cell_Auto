@@ -8,7 +8,7 @@ int sem_id; // usata in funzioni che richimano P e V
 int are_equal(short unsigned * a, short unsigned * b, int size)
 {
 	int i;
-	
+
 	for( i = 0; i < size; ++i )
 	{
 		if( *(a+i) != *(b+i) )	return -1;
@@ -61,7 +61,7 @@ int R(int semid, int semnum, int val)	// reset
 
 	union semun arg;
 	arg.val = val;
-	if( semctl(semid,semnum,SETVAL,arg) == -1 )  
+	if( semctl(semid,semnum,SETVAL,arg) == -1 )
 	{
 		fprintf (stderr, "Errore inizializzazione del semaforo\n%s\n",
 				strerror(errno) );
@@ -98,7 +98,7 @@ short in_array(short n,short* a,short size)
 	for(i=0;i<size;++i) {
 		if( *(a+i)==n ) return 1;
 	}
-	return 0;	
+	return 0;
 }
 
 void clean_matrix(short unsigned* m,int* n_gen)
@@ -110,10 +110,13 @@ void clean_matrix(short unsigned* m,int* n_gen)
 }
 void init_matrix(short unsigned* m,int* n_gen)
 {
+	
+	//srand(time(NULL));
+
 	*n_gen=0;
 	int i;
 	for(i=0;i<N_X*N_Y;i++) {
-		if( (rand() % 100) % 3 == 0 )
+		if( ( ( random_in_range(0,RAND_MAX) % 3) == 0 ) )
 			m[i]=0;
 		else
 			m[i]=1;
@@ -154,14 +157,14 @@ void fiat(int x,int y,short unsigned* m)
 /*	pseudo casuale all'interno dell'intervallo semi aperto		*/
 /*		[min,max)												*/
 /*				  			 autore presunto: Ryan Reich		*/
-int random_in_range (unsigned int min, unsigned int max)	
+int random_in_range (unsigned int min, unsigned int max)
 {
 	int base_random = rand();
 	if (RAND_MAX == base_random) return random_in_range(min, max);
 	int range       = max - min,
 		remainder   = RAND_MAX % range,
 		bucket      = RAND_MAX / range;
-	 if (base_random < RAND_MAX - remainder) {	
+	 if (base_random < RAND_MAX - remainder) {
 		return min + base_random/bucket;
 	} else {
 		return random_in_range (min, max);

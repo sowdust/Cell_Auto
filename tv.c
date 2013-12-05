@@ -204,7 +204,7 @@ void main(int argc, char* argv[])
 		
 		// UNA VOLTA CHE TUTTI HANNO FINITO, COMINCIA
 		inuso = P(sem_id,0);
-
+		if( *n_generazioni == 1 ) sleep(2);
 		// COPIAMO UNIVERSO IN PERIODIC
 		if(*n_generazioni % 2 == 0)
 		{
@@ -246,8 +246,10 @@ void main(int argc, char* argv[])
 
 		// SE LA SITUAZIONE PERIODIC SCRIVIAMOLO
 
-		if	( (	(are_equal(shm,periodic_1,N_X*N_Y) == 1)
-			||	(are_equal(shm,periodic_2,N_X*N_Y) == 1) )
+		if	( ( ( (*n_generazioni%2==0) &&	(are_equal(shm,periodic_1,N_X*N_Y)
+		== 1))
+			||	( (*n_generazioni%2==1) && (are_equal(shm,periodic_2,N_X*N_Y) ==
+			1) ) )
 			&& *n_generazioni > 2  
 			)
 		{
