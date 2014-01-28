@@ -2,7 +2,7 @@ simple cellular automata.
 can take some default pattern / rules (hardwired into the code) or read from rle files.
 spread up into different cuncurrent processes ( requirement of the school project )
 
-related article published here: http://www.informatik.uni-trier.de/~ley/pers/hd/v/Vinci:Mattia
+related article published here: http://ceur-ws.org/Vol-1107/paper6.pdf
 
 
 
